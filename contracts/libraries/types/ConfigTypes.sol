@@ -16,8 +16,8 @@ library ConfigTypes {
         IERC20 depositAsset;
         IERC20[] buyAssets;
         uint256 treasuryFixedFeeOnVaultCreation;
-        uint256 creatorPercentageFeeOnDeposit;
-        uint256 treasuryPercentageFeeOnBalanceUpdate;
+        uint256 creatorPercentageFeeOnDeposit; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
+        uint256 treasuryPercentageFeeOnBalanceUpdate; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
     }
     struct StrategyParams {
         uint256[] buyAmounts;

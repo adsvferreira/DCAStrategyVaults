@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Enums} from "../libraries/types/Enums.sol";
+import {PercentageMath} from "../libraries/math/percentageMath.sol";
 import {ConfigTypes} from "../libraries/types/ConfigTypes.sol";
 import {IAutomatedVaultERC4626} from "../interfaces/IAutomatedVaultERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -24,7 +25,7 @@ import {IERC20Metadata, IERC20, ERC20} from "@openzeppelin/contracts/token/ERC20
 - %treasury fee must de set in constructor - OK
 - controller address set in constructor - OK
 - router address set in constructor - OK
-- accrues fees to creator in each deposit of others - TODO
+- accrues fees to creator in each deposit of others - OK
 - only worker and shares owners can withdraw - TODO
 - transfer fees to treasury in each worker interaction (withdraw) - TODO
 - accrues fees to Treasury in vault creation - fixed amount - implement at factory level (transfer in constructor is bad)
@@ -34,6 +35,7 @@ import {IERC20Metadata, IERC20, ERC20} from "@openzeppelin/contracts/token/ERC20
 
 contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
     using Math for uint256;
+    using PercentageMath for uint256;
     using SafeERC20 for IERC20;
     ConfigTypes.InitMultiAssetVaultParams public initMultiAssetVaultParams;
     ConfigTypes.StrategyParams public strategyParams;
@@ -138,5 +140,53 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             }
         }
         return (false, 0);
+    }
+
+    /**
+     * @dev Deposit/mint common workflow.
+     */
+    function _deposit(
+        address caller,
+        address receiver,
+        uint256 assets,
+        uint256 shares
+    ) internal virtual override {
+        // **************************************** ERC4262 ****************************************
+        // If _asset is ERC777, `transferFrom` can trigger a reentrancy BEFORE the transfer happens through the
+        // `tokensToSend` hook. On the other hand, the `tokenReceived` hook, that is triggered after the transfer,
+        // calls the vault, which is assumed not malicious.
+        //
+        // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
+        // assets are transferred and before the shares are minted, which is a valid state.
+        // slither-disable-next-line reentrancy-no-eth
+        // **************************************** CUSTOM ****************************************
+        // After underlying transfer and before vault lp mint _afterUnderlyingTransferHook was added
+        // where vault creator fee logic is implemented
+        address depositAsset = asset();
+        SafeERC20.safeTransferFrom(
+            IERC20(depositAsset),
+            caller,
+            address(this),
+            assets
+        );
+        _afterUnderlyingTransferHook(receiver, shares);
+        emit Deposit(caller, receiver, assets, shares);
+    }
+
+    function _afterUnderlyingTransferHook(
+        address receiver,
+        uint256 shares
+    ) internal {
+        if (receiver == initMultiAssetVaultParams.creator) {
+            _mint(receiver, shares);
+        } else {
+            uint256 creatorPercentage = initMultiAssetVaultParams
+                .creatorPercentageFeeOnDeposit;
+            uint256 depositorPercentage = 1 - creatorPercentage;
+            uint256 creatorShares = shares.percentMul(creatorPercentage);
+            uint256 depositorShares = shares.percentMul(depositorPercentage);
+            _mint(receiver, depositorShares);
+            _mint(initMultiAssetVaultParams.creator, creatorShares);
+        }
     }
 }
