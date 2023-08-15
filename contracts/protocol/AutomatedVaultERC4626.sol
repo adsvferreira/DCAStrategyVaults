@@ -26,9 +26,9 @@ import {IERC20Metadata, IERC20, ERC20} from "@openzeppelin/contracts/token/ERC20
 - controller address set in constructor - OK
 - router address set in constructor - OK
 - accrues fees to creator in each deposit of others - OK
-- only worker and shares owners can withdraw - TODO
-- transfer fees to treasury in each worker interaction (withdraw) - TODO
-- accrues fees to Treasury in vault creation - fixed amount - implement at factory level (transfer in constructor is bad)
+- give allowance to worker to spend all deposits - Allowance given by the user. Flow: 1-create vault/2-deposit underlying/3-allow worker to spend all lp's
+- transfer fees to treasury in each worker interaction (withdraw) - TODO  - implement at worker level
+- accrues fees to Treasury in vault creation - fixed amount - TODO - implement at factory level (transfer in constructor is bad)
 - only factory can instanciate - not requires - if not instanciated by factory, controller/router will not know about it and it's useless
 
 **/
@@ -74,6 +74,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         initMultiAssetVaultParams = _initMultiAssetVaultParams;
         strategyParams = _strategyParams;
         _setBuyAssetsDecimals(_initMultiAssetVaultParams.buyAssets);
+        initMultiAssetVaultParams.isActive = false;
     }
 
     /** @dev See {IERC4626-deposit}. */
@@ -88,8 +89,6 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
         uint256 shares = previewDeposit(assets);
         _deposit(_msgSender(), receiver, assets, shares);
-        // TODO: Transfer treasury fees
-        // TODO: Transfer creator fees if sender is not creator
         return shares;
     }
 
@@ -180,6 +179,8 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         if (receiver == initMultiAssetVaultParams.creator) {
             _mint(receiver, shares);
         } else {
+            // if deposit is not from vault creator, a fee will be removed
+            // from depositor and added to creator balance
             uint256 creatorPercentage = initMultiAssetVaultParams
                 .creatorPercentageFeeOnDeposit;
             uint256 depositorPercentage = 1 - creatorPercentage;
@@ -187,6 +188,10 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             uint256 depositorShares = shares.percentMul(depositorPercentage);
             _mint(receiver, depositorShares);
             _mint(initMultiAssetVaultParams.creator, creatorShares);
+        }
+        // Activates vault after 1st deposit
+        if (initMultiAssetVaultParams.isActive == false) {
+            initMultiAssetVaultParams.isActive == true;
         }
     }
 }

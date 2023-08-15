@@ -8,11 +8,10 @@ library ConfigTypes {
     struct InitMultiAssetVaultParams {
         string name;
         string symbol;
-        address router;
-        address factory;
         address treasury;
         address creator;
-        address controller;
+        address factory;
+        bool isActive;
         IERC20 depositAsset;
         IERC20[] buyAssets;
         uint256 treasuryFixedFeeOnVaultCreation;
@@ -22,5 +21,6 @@ library ConfigTypes {
     struct StrategyParams {
         uint256[] buyAmounts;
         Enums.BuyFrequency buyFrequency;
+        Enums.StrategyType strategyType;
     }
 }

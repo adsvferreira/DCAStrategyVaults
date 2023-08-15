@@ -8,4 +8,7 @@ library Enums {
         BI_WEEKLY,
         MONTHLY
     }
+    enum StrategyType {
+        DCA
+    }
 }
