@@ -4,12 +4,9 @@ pragma solidity 0.8.21;
 /**
  * @title   Automated ERC-4626 Vault.
  * @author  André Ferreira
- * @notice  See the following for the full EIP-4626 specification https://eips.ethereum.org/EIPS/eip-4626.
- * @notice  See the following for the full EIP-4626 openzeppelin implementation https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC4626.sol.
-
-  * @dev    VERSION: 1.0
- *          DATE:    2023.08.13
-*/
+ * @dev    VERSION: 1.0
+ *          DATE:    2023.08.15
+ */
 
 /**
 TODO:
