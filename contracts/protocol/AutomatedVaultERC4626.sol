@@ -1,6 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
+/**
+ * @title   Automated ERC-4626 Vault Factory.
+ * @author  André Ferreira
+
+  * @dev    VERSION: 1.0
+ *          DATE:    2023.08.15
+*/
+
+/**
+
+TODO:
+- implements most of the ERC4626 functions - OK
+- %treasury fee must de set in constructor - OK
+- controller address set in constructor - OK
+- router address set in constructor - OK
+- accrues fees to creator in each deposit of others - OK
+- accrues fees to Treasury in vault creation - fixed amount - TODO - implement at factory level (transfer in constructor is bad) - OK
+- only factory can instanciate - OK
+- give allowance to worker to spend all deposits - Allowance given by the user. Flow: 1-create vault/2-deposit underlying/3-allow worker to spend all lp's
+- transfer fees to treasury in each worker interaction (withdraw) - TODO  - implement at worker level
+*/
+
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Enums} from "../libraries/types/Enums.sol";
 import {PercentageMath} from "../libraries/math/percentageMath.sol";
@@ -9,29 +31,6 @@ import {IAutomatedVaultERC4626} from "../interfaces/IAutomatedVaultERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC4626, IERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {IERC20Metadata, IERC20, ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-/**
- * @title   Automated ERC-4626 Vault.
- * @author  André Ferreira
- * @notice  See the following for the full EIP-4626 specification https://eips.ethereum.org/EIPS/eip-4626.
- * @notice  See the following for the full EIP-4626 openzeppelin implementation https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC4626.sol.
-
-  * @dev    VERSION: 1.0
- *          DATE:    2023.08.13
- * ====
-
-
-- implements most of the ERC4626 functions - OK
-- %treasury fee must de set in constructor - OK
-- controller address set in constructor - OK
-- router address set in constructor - OK
-- accrues fees to creator in each deposit of others - OK
-- give allowance to worker to spend all deposits - Allowance given by the user. Flow: 1-create vault/2-deposit underlying/3-allow worker to spend all lp's
-- transfer fees to treasury in each worker interaction (withdraw) - TODO  - implement at worker level
-- accrues fees to Treasury in vault creation - fixed amount - TODO - implement at factory level (transfer in constructor is bad)
-- only factory can instanciate - not requires - if not instanciated by factory, controller/router will not know about it and it's useless
-
-**/
 
 contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
     using Math for uint256;
@@ -44,6 +43,13 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
     uint8[] private _buyAssetsDecimals;
     uint8 public immutable buyAssetsLength;
+
+    event CreatorFeeTransfered(
+        address indexed vault,
+        address indexed depositor,
+        address indexed creator,
+        uint256 shares
+    );
 
     /**
      * @dev Attempted to deposit more assets than the max amount for `receiver`.
@@ -67,6 +73,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             _initMultiAssetVaultParams.symbol
         )
     {
+        require(msg.sender == _initMultiAssetVaultParams.factory, "FORBIDDEN");
         _validateInputs(
             _initMultiAssetVaultParams.buyAssets,
             strategyParams.buyAmounts
@@ -188,6 +195,12 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             uint256 depositorShares = shares.percentMul(depositorPercentage);
             _mint(receiver, depositorShares);
             _mint(initMultiAssetVaultParams.creator, creatorShares);
+            emit CreatorFeeTransfered(
+                address(this),
+                initMultiAssetVaultParams.creator,
+                receiver,
+                creatorShares
+            );
         }
         // Activates vault after 1st deposit
         if (initMultiAssetVaultParams.isActive == false) {

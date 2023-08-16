@@ -14,9 +14,13 @@ library ConfigTypes {
         bool isActive;
         IERC20 depositAsset;
         IERC20[] buyAssets;
-        uint256 treasuryFixedFeeOnVaultCreation;
-        uint256 creatorPercentageFeeOnDeposit; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
-        uint256 treasuryPercentageFeeOnBalanceUpdate; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
+        uint256 creatorPercentageFeeOnDeposit;
+    }
+    struct InitMultiAssetVaultFactoryParams {
+        string name;
+        string symbol;
+        IERC20 depositAsset;
+        IERC20[] buyAssets;
     }
     struct StrategyParams {
         uint256[] buyAmounts;
