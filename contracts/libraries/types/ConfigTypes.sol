@@ -19,8 +19,8 @@ library ConfigTypes {
     struct InitMultiAssetVaultFactoryParams {
         string name;
         string symbol;
-        IERC20 depositAsset;
-        IERC20[] buyAssets;
+        address depositAsset;
+        address[] buyAssets;
     }
     struct StrategyParams {
         uint256[] buyAmounts;

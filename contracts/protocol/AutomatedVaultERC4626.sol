@@ -25,10 +25,10 @@ TODO:
 - transfer fees to treasury in each worker interaction (withdraw) - TODO  - implement at worker level
 */
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Enums} from "../libraries/types/Enums.sol";
-import {PercentageMath} from "../libraries/math/percentageMath.sol";
 import {ConfigTypes} from "../libraries/types/ConfigTypes.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {PercentageMath} from "../libraries/math/percentageMath.sol";
 import {IAutomatedVaultERC4626} from "../interfaces/IAutomatedVaultERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC4626, IERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
@@ -75,10 +75,10 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             _initMultiAssetVaultParams.symbol
         )
     {
-        require(msg.sender == _initMultiAssetVaultParams.factory, "FORBIDDEN");
+        // require(msg.sender == _initMultiAssetVaultParams.factory, "FORBIDDEN");
         _validateInputs(
             _initMultiAssetVaultParams.buyAssets,
-            strategyParams.buyAmounts
+            _strategyParams.buyAmounts
         );
         initMultiAssetVaultParams = _initMultiAssetVaultParams;
         strategyParams = _strategyParams;
@@ -104,7 +104,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
     function _validateInputs(
         IERC20[] memory buyAssets,
         uint256[] memory buyAmounts
-    ) internal pure {
+    ) private pure {
         // Check if max number of deposited assets was not exceeded
         require(
             buyAssets.length <= uint256(MAX_NUMBER_OF_BUY_ASSETS),
@@ -117,16 +117,14 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         );
     }
 
-    function _setBuyAssetsDecimals(IERC20[] memory buyAssets) internal {
+    function _setBuyAssetsDecimals(IERC20[] memory buyAssets) private {
         for (uint8 i = 0; i < buyAssets.length; i++) {
             _buyAssetsDecimals[i] = _getAssetDecimals(buyAssets[i]);
         }
     }
 
-    function _getAssetDecimals(
-        IERC20 depositAsset
-    ) private view returns (uint8) {
-        (bool success, uint8 assetDecimals) = _tryGetAssetDecimals(
+    function _getAssetDecimals(IERC20 depositAsset) private returns (uint8) {
+        (bool success, uint8 assetDecimals) = _originalTryGetAssetDecimals(
             depositAsset
         );
         uint8 finalAssetDecimals = success ? assetDecimals : 18;
@@ -136,9 +134,9 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
     /**
      * @dev Attempts to fetch the asset decimals. A return value of false indicates that the attempt failed in some way.
      */
-    function _tryGetAssetDecimals(
+    function _originalTryGetAssetDecimals(
         IERC20 asset_
-    ) private view override returns (bool, uint8) {
+    ) private view returns (bool, uint8) {
         (bool success, bytes memory encodedDecimals) = address(asset_)
             .staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
         if (success && encodedDecimals.length >= 32) {

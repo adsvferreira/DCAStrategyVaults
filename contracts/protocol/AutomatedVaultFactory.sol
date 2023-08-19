@@ -17,23 +17,34 @@ Check if new vault addresses are not colliding
 
 import {Enums} from "../libraries/types/Enums.sol";
 import {ConfigTypes} from "../libraries/types/ConfigTypes.sol";
-import {AutomatedVaultERC4626, IAutomatedVaultERC4626} from "./AutomatedVaultERC4626.sol";
+import {AutomatedVaultERC4626, IAutomatedVaultERC4626, IERC20} from "./AutomatedVaultERC4626.sol";
 
 contract AutomatedVaultsFactory {
     event VaultCreated(
         address indexed creator,
         address indexed depositAsset,
+        address[] buyAssets,
         address vaultAddress,
         uint256[] buyAmounts,
         Enums.BuyFrequency buyFrequency,
         Enums.StrategyType strategyType
     );
     event TreasuryFeeTransfered(address creator, uint256 amount);
+    // debug only:
+    // event CreatingVault(
+    //     address creator,
+    //     address depositAsset,
+    //     address[] buyAssets,
+    //     address vaultAddress,
+    //     uint256[] buyAmounts,
+    //     Enums.BuyFrequency buyFrequency,
+    //     Enums.StrategyType strategyType
+    // );
 
     address public treasury;
     uint256 public treasuryFixedFeeOnVaultCreation; // AMOUNT IN NATIVE TOKEN CONSIDERING ALL DECIMALS
-    uint256 creatorPercentageFeeOnDeposit; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
-    uint256 treasuryPercentageFeeOnBalanceUpdate; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
+    uint256 public creatorPercentageFeeOnDeposit; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
+    uint256 public treasuryPercentageFeeOnBalanceUpdate; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
 
     address[] public allVaults;
     mapping(address => address[]) public getUserVaults;
@@ -67,6 +78,16 @@ contract AutomatedVaultsFactory {
             memory initMultiAssetVaultParams = _buildInitMultiAssetVaultParams(
                 initMultiAssetVaultFactoryParams
             );
+        // debug only
+        // emit CreatingVault(
+        //     initMultiAssetVaultParams.creator,
+        //     address(initMultiAssetVaultParams.depositAsset),
+        //     initMultiAssetVaultFactoryParams.buyAssets,
+        //     newVaultAddress,
+        //     strategyParams.buyAmounts,
+        //     strategyParams.buyFrequency,
+        //     strategyParams.strategyType
+        // );
         IAutomatedVaultERC4626 newVault = new AutomatedVaultERC4626(
             initMultiAssetVaultParams,
             strategyParams
@@ -77,6 +98,7 @@ contract AutomatedVaultsFactory {
         emit VaultCreated(
             initMultiAssetVaultParams.creator,
             address(initMultiAssetVaultParams.depositAsset),
+            initMultiAssetVaultFactoryParams.buyAssets,
             newVaultAddress,
             strategyParams.buyAmounts,
             strategyParams.buyFrequency,
@@ -87,7 +109,7 @@ contract AutomatedVaultsFactory {
     function _validateCreateVaultInputs(
         ConfigTypes.InitMultiAssetVaultFactoryParams
             memory initMultiAssetVaultFactoryParams
-    ) internal {
+    ) private view {
         require(
             address(initMultiAssetVaultFactoryParams.depositAsset) !=
                 address(0),
@@ -96,7 +118,7 @@ contract AutomatedVaultsFactory {
         require(msg.sender.balance > treasuryFixedFeeOnVaultCreation);
     }
 
-    function _transferTreasuryFee() internal {
+    function _transferTreasuryFee() private {
         (bool success, ) = msg.sender.call{
             value: treasuryFixedFeeOnVaultCreation
         }("");
@@ -111,8 +133,8 @@ contract AutomatedVaultsFactory {
         ConfigTypes.InitMultiAssetVaultFactoryParams
             memory _initMultiAssetVaultFactoryParams
     )
-        internal
-        pure
+        private
+        view
         returns (
             ConfigTypes.InitMultiAssetVaultParams
                 memory _initMultiAssetVaultParams
@@ -125,13 +147,26 @@ contract AutomatedVaultsFactory {
             address(msg.sender),
             address(this),
             false,
-            _initMultiAssetVaultFactoryParams.depositAsset,
-            _initMultiAssetVaultFactoryParams.buyAssets,
+            IERC20(_initMultiAssetVaultFactoryParams.depositAsset),
+            _wrapBuyAddressesIntoIERC20(
+                _initMultiAssetVaultFactoryParams.buyAssets
+            ),
             creatorPercentageFeeOnDeposit
         );
     }
 
-    function _addUserVault(address creator, address newVault) internal {
+    function _wrapBuyAddressesIntoIERC20(
+        address[] memory buyAddresses
+    ) private pure returns (IERC20[] memory iERC20instances) {
+        uint256 buyAddressesLength = buyAddresses.length;
+        iERC20instances = new IERC20[](buyAddressesLength);
+        for (uint256 i = 0; i < buyAddressesLength; i++) {
+            iERC20instances[i] = IERC20(buyAddresses[i]);
+        }
+        return iERC20instances;
+    }
+
+    function _addUserVault(address creator, address newVault) private {
         require(
             creator != address(0),
             "Null Address is not a valid creator address"
@@ -167,7 +202,7 @@ contract AutomatedVaultsFactory {
     //     uint256[] memory buyAmounts,
     //     Enums.BuyFrequency buyFrequency,
     //     Enums.StrategyType strategyType
-    // ) internal pure returns (address) {
+    // ) private pure returns (address) {
     //     bytes32 salt = keccak256(
     //         abi.encodePacked(
     //             bytecode,
