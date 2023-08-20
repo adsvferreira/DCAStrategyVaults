@@ -75,7 +75,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             _initMultiAssetVaultParams.symbol
         )
     {
-        // require(msg.sender == _initMultiAssetVaultParams.factory, "FORBIDDEN");
+        require(msg.sender == _initMultiAssetVaultParams.factory, "FORBIDDEN");
         _validateInputs(
             _initMultiAssetVaultParams.buyAssets,
             _strategyParams.buyAmounts
@@ -123,7 +123,9 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         }
     }
 
-    function _getAssetDecimals(IERC20 depositAsset) private returns (uint8) {
+    function _getAssetDecimals(
+        IERC20 depositAsset
+    ) private view returns (uint8) {
         (bool success, uint8 assetDecimals) = _originalTryGetAssetDecimals(
             depositAsset
         );

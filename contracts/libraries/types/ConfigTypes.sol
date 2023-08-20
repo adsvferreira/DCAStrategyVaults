@@ -8,8 +8,8 @@ library ConfigTypes {
     struct InitMultiAssetVaultParams {
         string name;
         string symbol;
-        address treasury;
-        address creator;
+        address payable treasury;
+        address payable creator;
         address factory;
         bool isActive;
         IERC20 depositAsset;

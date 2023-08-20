@@ -41,7 +41,7 @@ contract AutomatedVaultsFactory {
     //     Enums.StrategyType strategyType
     // );
 
-    address public treasury;
+    address payable public treasury;
     uint256 public treasuryFixedFeeOnVaultCreation; // AMOUNT IN NATIVE TOKEN CONSIDERING ALL DECIMALS
     uint256 public creatorPercentageFeeOnDeposit; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
     uint256 public treasuryPercentageFeeOnBalanceUpdate; // ONE_TEN_THOUSANDTH_PERCENT units (1 = 0.01%)
@@ -52,7 +52,7 @@ contract AutomatedVaultsFactory {
     // mapping(address => bool) public isVaultCreated;
 
     constructor(
-        address _treasury,
+        address payable _treasury,
         uint256 _treasuryFixedFeeOnVaultCreation,
         uint256 _creatorPercentageFeeOnDeposit,
         uint256 _treasuryPercentageFeeOnBalanceUpdate
@@ -115,14 +115,17 @@ contract AutomatedVaultsFactory {
                 address(0),
             "ZERO_ADDRESS"
         );
-        require(msg.sender.balance > treasuryFixedFeeOnVaultCreation);
+        require(
+            msg.sender.balance > treasuryFixedFeeOnVaultCreation,
+            "Not enough balance"
+        );
     }
 
     function _transferTreasuryFee() private {
-        (bool success, ) = msg.sender.call{
+        (bool success, ) = treasury.call{
             value: treasuryFixedFeeOnVaultCreation
         }("");
-        require(success, "Fee transfer to treasurty address failed.");
+        require(success, "Fee transfer to treasury address failed.");
         emit TreasuryFeeTransfered(
             address(msg.sender),
             treasuryFixedFeeOnVaultCreation
@@ -144,7 +147,7 @@ contract AutomatedVaultsFactory {
             _initMultiAssetVaultFactoryParams.name,
             _initMultiAssetVaultFactoryParams.symbol,
             treasury,
-            address(msg.sender),
+            payable(msg.sender),
             address(this),
             false,
             IERC20(_initMultiAssetVaultFactoryParams.depositAsset),
@@ -153,6 +156,7 @@ contract AutomatedVaultsFactory {
             ),
             creatorPercentageFeeOnDeposit
         );
+        return _initMultiAssetVaultParams;
     }
 
     function _wrapBuyAddressesIntoIERC20(
