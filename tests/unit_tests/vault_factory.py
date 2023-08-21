@@ -8,7 +8,7 @@ weth_address = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
 wbtc_address = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
 
 
-treasury_fixed_fee_on_vault_creation = 1 #0.01 ETH
+treasury_fixed_fee_on_vault_creation = 1_000_000_000_000_000 #0.01 ETH
 creator_percentage_fee_on_deposit = 25 #0.25%
 treasury_percentage_fee_on_balance_update = 25 #0.25
 
@@ -28,4 +28,6 @@ strategy_params=([1_000_000_000_000_000_000, 10_000_000], 0, 0)
 # [[1000000000000000000,10000000],0,0]
 
 tx=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':accounts[0], "value":1_000_000_000_000_000})
+
+print("TREASURY BALANCE: ", TreasuryVault[-1].balance())
 
