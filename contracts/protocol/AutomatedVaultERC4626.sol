@@ -195,18 +195,18 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             uint256 depositorPercentage = 1 - creatorPercentage;
             uint256 creatorShares = shares.percentMul(creatorPercentage);
             uint256 depositorShares = shares.percentMul(depositorPercentage);
-            _mint(receiver, depositorShares);
-            _mint(initMultiAssetVaultParams.creator, creatorShares);
+            // Activates vault after 1st deposit
+            if (initMultiAssetVaultParams.isActive == false) {
+                initMultiAssetVaultParams.isActive == true;
+            }
             emit CreatorFeeTransfered(
                 address(this),
                 initMultiAssetVaultParams.creator,
                 receiver,
                 creatorShares
             );
-        }
-        // Activates vault after 1st deposit
-        if (initMultiAssetVaultParams.isActive == false) {
-            initMultiAssetVaultParams.isActive == true;
+            _mint(receiver, depositorShares);
+            _mint(initMultiAssetVaultParams.creator, creatorShares);
         }
     }
 }

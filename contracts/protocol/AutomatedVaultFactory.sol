@@ -71,9 +71,18 @@ contract AutomatedVaultsFactory {
         ConfigTypes.InitMultiAssetVaultFactoryParams
             memory initMultiAssetVaultFactoryParams,
         ConfigTypes.StrategyParams calldata strategyParams
-    ) external returns (address newVaultAddress) {
+    ) external payable returns (address newVaultAddress) {
+        require(
+            msg.value >= treasuryFixedFeeOnVaultCreation,
+            "Ether transfered insufficient to pay creation fees"
+        );
         _validateCreateVaultInputs(initMultiAssetVaultFactoryParams);
-        _transferTreasuryFee();
+        emit TreasuryFeeTransfered(
+            address(msg.sender),
+            treasuryFixedFeeOnVaultCreation
+        );
+        (bool success, ) = treasury.call{value: msg.value}("");
+        require(success, "Fee transfer to treasury address failed.");
         ConfigTypes.InitMultiAssetVaultParams
             memory initMultiAssetVaultParams = _buildInitMultiAssetVaultParams(
                 initMultiAssetVaultFactoryParams
@@ -117,18 +126,7 @@ contract AutomatedVaultsFactory {
         );
         require(
             msg.sender.balance > treasuryFixedFeeOnVaultCreation,
-            "Not enough balance"
-        );
-    }
-
-    function _transferTreasuryFee() private {
-        (bool success, ) = treasury.call{
-            value: treasuryFixedFeeOnVaultCreation
-        }("");
-        require(success, "Fee transfer to treasury address failed.");
-        emit TreasuryFeeTransfered(
-            address(msg.sender),
-            treasuryFixedFeeOnVaultCreation
+            "Insufficient balance"
         );
     }
 
