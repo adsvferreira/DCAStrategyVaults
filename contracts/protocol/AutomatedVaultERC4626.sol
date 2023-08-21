@@ -119,7 +119,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
     function _setBuyAssetsDecimals(IERC20[] memory buyAssets) private {
         for (uint8 i = 0; i < buyAssets.length; i++) {
-            _buyAssetsDecimals[i] = _getAssetDecimals(buyAssets[i]);
+            _buyAssetsDecimals.push(_getAssetDecimals(buyAssets[i]));
         }
     }
 
