@@ -192,7 +192,8 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             // from depositor and added to creator balance
             uint256 creatorPercentage = initMultiAssetVaultParams
                 .creatorPercentageFeeOnDeposit;
-            uint256 depositorPercentage = 1 - creatorPercentage;
+            uint256 depositorPercentage = PercentageMath.PERCENTAGE_FACTOR -
+                creatorPercentage;
             uint256 creatorShares = shares.percentMul(creatorPercentage);
             uint256 depositorShares = shares.percentMul(depositorPercentage);
             // Activates vault after 1st deposit
