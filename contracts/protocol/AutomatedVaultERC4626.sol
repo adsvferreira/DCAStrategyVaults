@@ -46,6 +46,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
     address[] public buyAssetAddresses;
     uint8[] public buyAssetsDecimals;
     uint256 public buyAssetsLength;
+    uint256 public lastUpdate;
 
     event CreatorFeeTransfered(
         address indexed vault,
