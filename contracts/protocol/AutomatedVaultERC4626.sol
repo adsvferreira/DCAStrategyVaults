@@ -43,8 +43,9 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
     uint8 public constant MAX_NUMBER_OF_BUY_ASSETS = 10;
 
-    uint8[] private _buyAssetsDecimals;
-    uint8 public immutable buyAssetsLength;
+    address[] public buyAssetAddresses;
+    uint8[] public buyAssetsDecimals;
+    uint256 public buyAssetsLength;
 
     event CreatorFeeTransfered(
         address indexed vault,
@@ -81,6 +82,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
             _strategyParams.buyAmounts
         );
         initMultiAssetVaultParams = _initMultiAssetVaultParams;
+        _populateBuyAssetsData(_initMultiAssetVaultParams);
         strategyParams = _strategyParams;
         _setBuyAssetsDecimals(_initMultiAssetVaultParams.buyAssets);
         initMultiAssetVaultParams.isActive = false;
@@ -119,7 +121,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
     function _setBuyAssetsDecimals(IERC20[] memory buyAssets) private {
         for (uint8 i = 0; i < buyAssets.length; i++) {
-            _buyAssetsDecimals.push(_getAssetDecimals(buyAssets[i]));
+            buyAssetsDecimals.push(_getAssetDecimals(buyAssets[i]));
         }
     }
 
@@ -131,6 +133,17 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         );
         uint8 finalAssetDecimals = success ? assetDecimals : 18;
         return finalAssetDecimals;
+    }
+
+    function _populateBuyAssetsData(
+        ConfigTypes.InitMultiAssetVaultParams memory _initMultiAssetVaultParams
+    ) private {
+        buyAssetsLength = _initMultiAssetVaultParams.buyAssets.length;
+        for (uint256 i = 0; i < buyAssetsLength; i++) {
+            buyAssetAddresses.push(
+                address(_initMultiAssetVaultParams.buyAssets[i])
+            );
+        }
     }
 
     /**

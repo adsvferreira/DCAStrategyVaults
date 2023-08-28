@@ -30,16 +30,6 @@ contract AutomatedVaultsFactory {
         Enums.StrategyType strategyType
     );
     event TreasuryFeeTransfered(address creator, uint256 amount);
-    // debug only:
-    // event CreatingVault(
-    //     address creator,
-    //     address depositAsset,
-    //     address[] buyAssets,
-    //     address vaultAddress,
-    //     uint256[] buyAmounts,
-    //     Enums.BuyFrequency buyFrequency,
-    //     Enums.StrategyType strategyType
-    // );
 
     address payable public treasury;
     uint256 public treasuryFixedFeeOnVaultCreation; // AMOUNT IN NATIVE TOKEN CONSIDERING ALL DECIMALS
@@ -87,16 +77,6 @@ contract AutomatedVaultsFactory {
             memory initMultiAssetVaultParams = _buildInitMultiAssetVaultParams(
                 initMultiAssetVaultFactoryParams
             );
-        // debug only
-        // emit CreatingVault(
-        //     initMultiAssetVaultParams.creator,
-        //     address(initMultiAssetVaultParams.depositAsset),
-        //     initMultiAssetVaultFactoryParams.buyAssets,
-        //     newVaultAddress,
-        //     strategyParams.buyAmounts,
-        //     strategyParams.buyFrequency,
-        //     strategyParams.strategyType
-        // );
         IAutomatedVaultERC4626 newVault = new AutomatedVaultERC4626(
             initMultiAssetVaultParams,
             strategyParams
