@@ -89,6 +89,14 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         initMultiAssetVaultParams.isActive = false;
     }
 
+    modifier onlyStrategyWorker() {
+        require(
+            msg.sender == strategyParams.strategyWorker,
+            "Only StrategyWorker can call this"
+        );
+        _;
+    }
+
     /** @dev See {IERC4626-deposit}. */
     function deposit(
         uint256 assets,
@@ -102,6 +110,10 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         uint256 shares = previewDeposit(assets);
         _deposit(_msgSender(), receiver, assets, shares);
         return shares;
+    }
+
+    function setLastUpdate() public onlyStrategyWorker {
+        lastUpdate = block.timestamp;
     }
 
     function _validateInputs(

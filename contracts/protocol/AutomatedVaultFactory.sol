@@ -132,7 +132,8 @@ contract AutomatedVaultsFactory {
             _wrapBuyAddressesIntoIERC20(
                 _initMultiAssetVaultFactoryParams.buyAssets
             ),
-            creatorPercentageFeeOnDeposit
+            creatorPercentageFeeOnDeposit,
+            treasuryPercentageFeeOnBalanceUpdate
         );
         return _initMultiAssetVaultParams;
     }

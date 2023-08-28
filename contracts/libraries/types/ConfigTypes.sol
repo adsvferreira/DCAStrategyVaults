@@ -15,6 +15,7 @@ library ConfigTypes {
         IERC20 depositAsset;
         IERC20[] buyAssets;
         uint256 creatorPercentageFeeOnDeposit;
+        uint256 treasuryPercentageFeeOnBalanceUpdate;
     }
     struct InitMultiAssetVaultFactoryParams {
         string name;
@@ -26,5 +27,6 @@ library ConfigTypes {
         uint256[] buyAmounts;
         Enums.BuyFrequency buyFrequency;
         Enums.StrategyType strategyType;
+        address strategyWorker;
     }
 }

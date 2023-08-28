@@ -23,18 +23,18 @@ contract StrategiesTreasuryVault {
     }
 
     function deposit(
-        address depositorAddress,
-        address[] calldata assetAddresses,
-        uint256[] calldata amounts
+        address _depositorAddress,
+        address[] calldata _assetAddresses,
+        uint256[] calldata _amounts
     ) external onlyStrategyWorker {
         require(
-            assetAddresses.length == amounts.length,
+            _assetAddresses.length == _amounts.length,
             "assetAddresses and amounts arrays length mismatch"
         );
 
-        for (uint256 i = 0; i < assetAddresses.length; i++) {
-            address assetAddress = assetAddresses[i];
-            uint256 amount = amounts[i];
+        for (uint256 i = 0; i < _assetAddresses.length; i++) {
+            address assetAddress = _assetAddresses[i];
+            uint256 amount = _amounts[i];
 
             require(amount > 0, "Amount must be greater than 0");
             require(
@@ -48,20 +48,20 @@ contract StrategiesTreasuryVault {
                 amount
             );
 
-            claimableBalances[depositorAddress][assetAddress] += amount;
+            claimableBalances[_depositorAddress][assetAddress] += amount;
         }
     }
 
-    function claim(address[] calldata assetAddresses) external {
+    function claim(address[] calldata _assetAddresses) external {
         require(
-            assetAddresses.length > 0,
+            _assetAddresses.length > 0,
             "No claimable token addresses specified"
         );
 
         uint256 totalClaimable = 0;
 
-        for (uint256 i = 0; i < assetAddresses.length; i++) {
-            address assetAddress = assetAddresses[i];
+        for (uint256 i = 0; i < _assetAddresses.length; i++) {
+            address assetAddress = _assetAddresses[i];
             uint256 balance = claimableBalances[msg.sender][assetAddress];
 
             if (balance > 0) {

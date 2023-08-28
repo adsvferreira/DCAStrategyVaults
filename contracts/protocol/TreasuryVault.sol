@@ -22,30 +22,30 @@ contract TreasuryVault is Ownable {
         emit EtherReceived(msg.sender, msg.value);
     }
 
-    function withdrawNative(uint256 amount) public onlyOwner {
-        require(amount <= address(this).balance, "Insufficient balance");
-        (bool success, ) = owner().call{value: amount}("");
+    function withdrawNative(uint256 _amount) public onlyOwner {
+        require(_amount <= address(this).balance, "Insufficient balance");
+        (bool success, ) = owner().call{value: _amount}("");
         require(success, "Ether transfer failed");
-        emit NativeWithdrawal(owner(), amount);
+        emit NativeWithdrawal(owner(), _amount);
     }
 
     function withdrawERC20(
-        address tokenAddress,
-        uint256 amount
+        address _tokenAddress,
+        uint256 _amount
     ) public onlyOwner {
-        IERC20 token = IERC20(tokenAddress);
+        IERC20 token = IERC20(_tokenAddress);
         require(
-            amount <= token.balanceOf(address(this)),
+            _amount <= token.balanceOf(address(this)),
             "Insufficient balance"
         );
-        (bool success, ) = tokenAddress.call(
+        (bool success, ) = _tokenAddress.call(
             abi.encodeWithSignature(
                 "transfer(address,uint256)",
                 owner(),
-                amount
+                _amount
             )
         );
         require(success, "Token transfer failed");
-        emit ERC20Withdrawal(owner(), tokenAddress, amount);
+        emit ERC20Withdrawal(owner(), _tokenAddress, _amount);
     }
 }
