@@ -1,5 +1,14 @@
 from brownie import accounts, config
 from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault
+# Goerli testing addresses (old):
+# Treasury: 0x964FF99Ff53DbAaCE609eB2dA09953F9b9CAeec3
+# Factory: 0x3bBc24e06285E4229d25c1a7b1BcaB9482F1288c
+# Vault: 0x205eb5673D825ED50Be3FcF4532A8201bdcDE4A7
+
+# Arbitrum mainnet testing addresses (old):
+# Treasury: 0xA87c2b2dB83E849Ba1FFcf40C8F56F4984CFbC69
+# Factory: 0x87899933E5E989Ae4F028FD09D77E47F8912D229
+# Vault: 0x35A816b3b2E53d64d9a135fe1f4323e59A73645b
 
 # dev_wallet = accounts[0]
 dev_wallet = accounts.add(config["wallets"]["from_key_1"])
@@ -23,9 +32,10 @@ treasury_fixed_fee_on_vault_creation =  1_000_000_000_000_000 #0.01 ETH
 creator_percentage_fee_on_deposit = 25 #0.25%
 treasury_percentage_fee_on_balance_update = 25 #0.25
 
-tx1=TreasuryVault.deploy({'from': dev_wallet})
+tx1=TreasuryVault.deploy({'from': dev_wallet}) # owner must be protocol EOA
 # TreasuryVault.deploy({'from': dev_wallet}, publish_source=true)
-treasury_address = TreasuryVault[-1].address
+treasury_vault = TreasuryVault[-1]
+treasury_address = treasury_vault.address
 
 # AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet}, publish_source=true)
 tx2=AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet})
@@ -43,7 +53,8 @@ strategy_params=([1_000_000_000_000_000_000, 10_000_000], 0, 0)
 
 tx3=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
 
-print("TREASURY BALANCE: ", TreasuryVault[-1].balance())
+protocol_treasury_balance = treasury_vault.balance()
+print("TREASURY BALANCE: ", protocol_treasury_balance)
 print("ALL VAULTS LENGTH: ", vaults_factory.allVaultsLength())
 print("WALLET STRATEGIES", vaults_factory.getUserVaults(dev_wallet.address, 0))
 
@@ -72,16 +83,6 @@ tx6=created_strategy_vault.withdraw(10000, dev_wallet, dev_wallet, {'from': dev_
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
 
-# Goerli testing addresses:
-# Treasury: 0x964FF99Ff53DbAaCE609eB2dA09953F9b9CAeec3
-# Factory: 0x3bBc24e06285E4229d25c1a7b1BcaB9482F1288c
-# Vault: 0x205eb5673D825ED50Be3FcF4532A8201bdcDE4A7
-
-# Arbitrum mainnet testing addresses:
-# Treasury: 0xA87c2b2dB83E849Ba1FFcf40C8F56F4984CFbC69
-# Factory: 0x87899933E5E989Ae4F028FD09D77E47F8912D229
-# Vault: 0x35A816b3b2E53d64d9a135fe1f4323e59A73645b
-
 # NON-CREATOR DEPOSIT/ ARBITRUM
 dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
 # usdc = Contract.from_explorer(usdc_address)
@@ -103,6 +104,11 @@ tx7 = usdc.approve(created_strategy_vault_address, 200000, {'from': dev_wallet_2
 tx8=created_strategy_vault.deposit(100000, dev_wallet_2.address, {'from': dev_wallet_2})
 created_strategy_vault.balanceOf(dev_wallet_2)
 created_strategy_vault.balanceOf(dev_wallet)
+
+# WITHDRAW PROTOCOL TREASURY BALANCE (OWNER)
+tx9 = treasury_vault.withdrawNative(protocol_treasury_balance, {'from': dev_wallet})
+print("TREASURY BALANCE: ", treasury_vault.balance())
+
 
 # TODO: 
 # 1 - Transfer Ether + USDC to testing wallet -> Settup testing wallet in .env - OK
@@ -1263,5 +1269,182 @@ factory_abi = [
       ],
       "stateMutability": "view",
       "type": "function"
+    }
+  ]
+
+treasury_abi = [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": False,
+      "inputs": [
+        {
+          "indexed": True,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": True,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": False,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "ERC20Withdrawal",
+      "type": "event"
+    },
+    {
+      "anonymous": False,
+      "inputs": [
+        {
+          "indexed": True,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": False,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "EtherReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": False,
+      "inputs": [
+        {
+          "indexed": True,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": False,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "NativeWithdrawal",
+      "type": "event"
+    },
+    {
+      "anonymous": False,
+      "inputs": [
+        {
+          "indexed": True,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": True,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": False,
+      "inputs": [
+        {
+          "indexed": False,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": False,
+          "internalType": "address",
+          "name": "treasuryAddress",
+          "type": "address"
+        }
+      ],
+      "name": "TreasuryCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdrawERC20",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdrawNative",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
     }
   ]
