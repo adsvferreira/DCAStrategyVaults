@@ -16,11 +16,11 @@ contract StrategyWorker {
     using Math for uint256;
     using PercentageMath for uint256;
 
-    address dexRouter;
-    address controller;
-    address strategiesTreasuryVault;
+    address public dexRouter;
+    address public controller;
+    address public strategiesTreasuryVault;
 
-    event strategyActionExecuted(
+    event StrategyActionExecuted(
         address indexed vault,
         address indexed depositor,
         address tokenIn,
@@ -58,22 +58,24 @@ contract StrategyWorker {
         AutomatedVaultERC4626 _strategyVault = AutomatedVaultERC4626(
             _strategyVaultAddress
         );
-        IUniswapV2Router _dexRouter = IUniswapV2Router(dexRouter);
 
         (
             address _depositAsset,
             address[] memory _buyAssets,
             uint256[] memory _buyAmounts
         ) = _getSwapParams(_strategyVault);
+
         ConfigTypes.InitMultiAssetVaultParams
             memory initMultiAssetVaultParams = _strategyVault
-                .initMultiAssetVaultParams;
+                .getInitMultiAssetVaultParams();
+
         uint256 _actionFeePercentage = initMultiAssetVaultParams
             .treasuryPercentageFeeOnBalanceUpdate;
         address _protocolTreasuryAddress = initMultiAssetVaultParams.treasury;
         uint256 _amountToWithdraw;
         uint256[] memory _buyAmountsAfterFee;
         uint256 _totalFee;
+
         (
             _amountToWithdraw,
             _buyAmountsAfterFee,
@@ -83,10 +85,10 @@ contract StrategyWorker {
         uint256 _totalBuyAmount = _amountToWithdraw - _totalFee;
 
         _strategyVault.setLastUpdate();
-        address _strategyWorkerAddress = address(this);
+
         _strategyVault.withdraw(
             _amountToWithdraw,
-            _strategyWorkerAddress, //receiver
+            address(this), //receiver
             _depositorAddress //owner
         );
 
@@ -104,19 +106,19 @@ contract StrategyWorker {
             _protocolTreasuryAddress
         );
 
-        emit strategyActionExecuted(
+        emit StrategyActionExecuted(
             _strategyVaultAddress,
             _depositorAddress,
             _depositAsset,
             _totalBuyAmount,
             _buyAssets,
-            _buyAmountsAfterFee,
+            _swappedAssetAmounts,
             _totalFee
         );
     }
 
     function _getSwapParams(
-        IAutomatedVaultERC4626 _strategyVault
+        AutomatedVaultERC4626 _strategyVault
     )
         private
         view
@@ -128,10 +130,10 @@ contract StrategyWorker {
     {
         ConfigTypes.InitMultiAssetVaultParams
             memory _initMultiAssetVaultParams = _strategyVault
-                .initMultiAssetVaultParam;
+                .getInitMultiAssetVaultParams();
         _depositAsset = address(_initMultiAssetVaultParams.depositAsset);
-        _buyAssets = _strategyVault.buyAssetAddresses;
-        _buyAmounts = _strategyVault.strategyParams.buyAmounts;
+        _buyAssets = _strategyVault.getBuyAssetAddresses();
+        _buyAmounts = _strategyVault.getStrategyParams().buyAmounts;
     }
 
     function _calculateAmountsAfterFee(
@@ -145,12 +147,14 @@ contract StrategyWorker {
             uint256 _totalFee
         )
     {
-        for (uint256 i = 0; i < _buyAmountsAfterFee.length; i++) {
+        uint256 _buyAmountsLength = _buyAmounts.length;
+        _buyAmountsAfterFee = new uint256[](_buyAmountsLength);
+        for (uint256 i = 0; i < _buyAmountsLength; i++) {
             uint256 _buyAmount = _buyAmounts[i];
             uint256 _feeAmount = _buyAmount.percentMul(_actionFeePercentage);
             _totalFee += _feeAmount;
             uint256 _buyAmountAfterFee = _buyAmount - _feeAmount;
-            _buyAmountsAfterFee.push(_buyAmountAfterFee);
+            _buyAmountsAfterFee[i] = _buyAmountAfterFee;
             _amountToWithdraw += _buyAmount;
         }
         require(
@@ -163,14 +167,16 @@ contract StrategyWorker {
         address _depositAsset,
         address[] memory _buyAssets,
         uint256[] memory _buyAmountsAfterFee
-    ) internal returns (uint256[] memory amountsOut) {
+    ) internal returns (uint256[] memory _amountsOut) {
+        uint256 _buyAssetsLength = _buyAssets.length;
+        _amountsOut = new uint256[](_buyAssetsLength);
         for (uint256 i = 0; i < _buyAssets.length; i++) {
             uint256 amountOut = _swapToken(
                 _depositAsset,
                 _buyAssets[i],
                 _buyAmountsAfterFee[i]
             );
-            amountsOut.push(amountOut);
+            _amountsOut[i] = amountOut;
         }
     }
 
@@ -184,19 +190,20 @@ contract StrategyWorker {
             address(this),
             _buyAmountAfterFee
         );
-        IERC20(_depositAsset).approve(address(dexRouter), _buyAmountAfterFee);
+        IERC20(_depositAsset).approve(dexRouter, _buyAmountAfterFee);
 
         address[] memory _path = new address[](2);
         _path[0] = _depositAsset;
         _path[1] = _buyAsset;
 
-        uint256[] memory _amountsOut = dexRouter.swapExactTokensForTokens(
-            _buyAmountAfterFee,
-            0, // AmountOutMin (set to 0 for simplicity)
-            _path,
-            strategiesTreasuryVault, // swapped tokens sent directly ro strategy treasury
-            block.timestamp
-        );
+        uint256[] memory _amountsOut = IUniswapV2Router(dexRouter)
+            .swapExactTokensForTokens(
+                _buyAmountAfterFee,
+                0, // AmountOutMin (set to 0 for simplicity)
+                _path,
+                strategiesTreasuryVault, // swapped tokens sent directly ro strategy treasury
+                block.timestamp
+            );
         uint256 _amountsOutLength = _amountsOut.length;
         _amountOut = _amountsOut[_amountsOutLength - 1]; // amounts out contains results from all the pools in the choosen route
     }

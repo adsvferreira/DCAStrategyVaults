@@ -116,6 +116,26 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         lastUpdate = block.timestamp;
     }
 
+    function getInitMultiAssetVaultParams()
+        public
+        view
+        returns (ConfigTypes.InitMultiAssetVaultParams memory)
+    {
+        return initMultiAssetVaultParams;
+    }
+
+    function getBuyAssetAddresses() public view returns (address[] memory) {
+        return buyAssetAddresses;
+    }
+
+    function getStrategyParams()
+        public
+        view
+        returns (ConfigTypes.StrategyParams memory)
+    {
+        return strategyParams;
+    }
+
     function _validateInputs(
         IERC20[] memory buyAssets,
         uint256[] memory buyAmounts
