@@ -127,11 +127,11 @@ print("TREASURY BALANCE: ", treasury_vault.balance())
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.balanceOf(dev_wallet_2)
 
-# USER NEEDS TO GIVE ALLOWANCE TO WORKER FOR USING VAULT LP BALANCES
-tx12 = created_strategy_vault.approve(strategy_worker_address, sys.maxsize, {'from': dev_wallet})
+# USER NEEDS TO GIVE UNLIMITED ALLOWANCE TO WORKER FOR USING VAULT LP BALANCES
+tx12 = created_strategy_vault.approve(strategy_worker_address, sys.maxsize, {'from': dev_wallet_2})
 
 # BOTH HAVE BALANCE - EXECUTE STRATEGY ACTION FOR dev_wallet_2
-tx12 = controller.triggerStrategyAction(strategy_worker_address, created_strategy_vault_address, dev_wallet_2, {'from': dev_wallet})
+tx13 = controller.triggerStrategyAction(strategy_worker_address, created_strategy_vault_address, dev_wallet_2, {'from': dev_wallet})
 
 
 
