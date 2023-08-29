@@ -1,6 +1,7 @@
 import sys
 from brownie import accounts, config
 from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault, StrategyWorker, Controller, StrategiesTreasuryVault
+
 # Goerli testing addresses (old):
 # Treasury: 0x964FF99Ff53DbAaCE609eB2dA09953F9b9CAeec3
 # Factory: 0x3bBc24e06285E4229d25c1a7b1BcaB9482F1288c
@@ -16,18 +17,19 @@ dev_wallet = accounts.add(config["wallets"]["from_key_1"])
 dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
 
 # # MAINNET ADDRESSES:
-# usdc_address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+# usdce_address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 # vault_name = "weth/wbtc vault"
 # vault_symbol = "WETH/WBTC"
 # weth_address = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
 # wbtc_address = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
 
 # ARBITRUM MAINNET ADDRESSES (arbitrum-main-fork):
-usdc_address = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
-vault_name = "weth/wbtc vault"
-vault_symbol = "WETH/WBTC"
+usdce_address = "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8"
+vault_name = "weth/arb vault"
+vault_symbol = "WETH/ARB"
 weth_address = "0x82af49447d8a07e3bd95bd0d56f35241523fbab1"
-wbtc_address = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f"
+# wbtc_address = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f"
+arb_address = "0x912ce59144191c1204e64559fe8253a0e49e6548"
 
 
 treasury_fixed_fee_on_vault_creation =  1_000_000_000_000_000 #0.01 ETH
@@ -59,7 +61,7 @@ vaults_factory = AutomatedVaultsFactory[-1]
 # Test initual vaults length
 vaults_factory.allVaultsLength()
 
-init_vault_from_factory_params=(vault_name, vault_symbol, usdc_address, [weth_address, wbtc_address])
+init_vault_from_factory_params=(vault_name, vault_symbol, usdce_address, [weth_address, arb_address])
 strategy_params=([100_000, 100_000], 0, 0, strategy_worker_address) #Amounts in USDC 
 # Remix formated params:
 # ["weth/wbtc vault", "WETH/WBTC", "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"]]
@@ -79,7 +81,7 @@ print("INITIAL STRATEGY BALANCE", created_strategy_vault.balanceOf(dev_wallet))
 print("INIT VAULT PARAMS:", created_strategy_vault.initMultiAssetVaultParams())
 print("VAULT STRATEGY PARAMS:", created_strategy_vault.strategyParams())
 
-usdc = Contract.from_explorer(usdc_address)
+usdc = Contract.from_explorer(usdce_address)
 usdc_dev_balance = usdc.balanceOf(dev_wallet)
 print("USDC DEV BALANCE:", usdc_dev_balance)
 
@@ -99,7 +101,7 @@ created_strategy_vault.totalSupply()
 
 # NON-CREATOR DEPOSIT/ ARBITRUM
 
-# usdc = Contract.from_explorer(usdc_address)
+# usdc = Contract.from_explorer(usdce_address)
 # usdc_dev_balance = usdc.balanceOf(dev_wallet_2)
 # # vaults_factory_address = "0x87899933E5E989Ae4F028FD09D77E47F8912D229"
 # # factory = Contract.from_abi("AutomatedVaultsFactory", vaults_factory_address, factory_abi)
@@ -107,7 +109,7 @@ created_strategy_vault.totalSupply()
 
 # vaults_factory = AutomatedVaultsFactory[-1]
 
-# init_vault_from_factory_params=(vault_name, vault_symbol, usdc_address, [weth_address, wbtc_address])
+# init_vault_from_factory_params=(vault_name, vault_symbol, usdce_address, [weth_address, wbtc_address])
 # strategy_params=([1_000_000_000_000_000_000, 10_000_000], 0, 0)
 
 # tx1=factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
@@ -130,10 +132,23 @@ created_strategy_vault.balanceOf(dev_wallet_2)
 # USER NEEDS TO GIVE UNLIMITED ALLOWANCE TO WORKER FOR USING VAULT LP BALANCES
 tx12 = created_strategy_vault.approve(strategy_worker_address, sys.maxsize, {'from': dev_wallet_2})
 
+
+weth = Contract.from_explorer(weth_address)
+arb = Contract.from_explorer(arb_address)
+print("VAULT DEPOSITOR BALANCES BEFORE ACTION:")
+print(f"WETH: {weth.balanceOf(dev_wallet_2)}")
+print(f"ARB: {arb.balanceOf(dev_wallet_2)}")
 # BOTH HAVE BALANCE - EXECUTE STRATEGY ACTION FOR dev_wallet_2
 tx13 = controller.triggerStrategyAction(strategy_worker_address, created_strategy_vault_address, dev_wallet_2, {'from': dev_wallet})
+print("VAULT DEPOSITOR BALANCES AFTER ACTION:")
+print(f"WETH: {weth.balanceOf(dev_wallet_2)}")
+print(f"ARB: {arb.balanceOf(dev_wallet_2)}")
 
-
+# TODO: 
+# 1 - strategyWorker approve only if not yet done
+# 2 - Add events for treasuryFeeTransfered (Factory, Worker)
+# 3 - Remove buyAssetAddresses from vault state
+# 4 - Improve swap path (now a pool between two assets needs to exist)
 
 
 

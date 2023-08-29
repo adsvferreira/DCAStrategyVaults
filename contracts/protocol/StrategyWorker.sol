@@ -66,7 +66,8 @@ contract StrategyWorker {
 
         uint256 _actionFeePercentage = initMultiAssetVaultParams
             .treasuryPercentageFeeOnBalanceUpdate;
-        address _protocolTreasuryAddress = initMultiAssetVaultParams.treasury;
+        address payable _protocolTreasuryAddress = initMultiAssetVaultParams
+            .treasury;
         uint256 _amountToWithdraw;
         uint256[] memory _buyAmountsAfterFee;
         uint256 _totalFee;
@@ -87,6 +88,8 @@ contract StrategyWorker {
             _depositorAddress //owner
         );
 
+        IERC20(_depositAsset).approve(dexRouter, type(uint256).max);
+
         uint256[] memory _swappedAssetAmounts = _swapTokens(
             _depositorAddress,
             _depositAsset,
@@ -94,12 +97,14 @@ contract StrategyWorker {
             _buyAmountsAfterFee
         );
 
-        // _depositIntoStrategiesTreasury(); Done in swap function
+        IERC20(_depositAsset).approve(
+            _protocolTreasuryAddress,
+            type(uint256).max
+        );
 
-        _depositFeeIntoProtocolTreasury(
+        TreasuryVault(_protocolTreasuryAddress).depositERC20(
             _totalFee,
-            _depositAsset,
-            _protocolTreasuryAddress
+            _depositAsset
         );
 
         emit StrategyActionExecuted(
@@ -184,13 +189,6 @@ contract StrategyWorker {
         address _buyAsset,
         uint256 _buyAmountAfterFee
     ) internal returns (uint256 _amountOut) {
-        IERC20(_depositAsset).transferFrom(
-            msg.sender,
-            address(this),
-            _buyAmountAfterFee
-        );
-        IERC20(_depositAsset).approve(dexRouter, _buyAmountAfterFee);
-
         address[] memory _path = new address[](2);
         _path[0] = _depositAsset;
         _path[1] = _buyAsset;
@@ -200,23 +198,10 @@ contract StrategyWorker {
                 _buyAmountAfterFee,
                 0, // AmountOutMin (set to 0 for simplicity)
                 _path,
-                // strategiesTreasuryVault, // swapped tokens sent directly to strategy treasury
                 _depositorAddress, // swapped tokens sent directly to vault depositor
-                block.timestamp
+                block.timestamp + 600 //
             );
         uint256 _amountsOutLength = _amountsOut.length;
         _amountOut = _amountsOut[_amountsOutLength - 1]; // amounts out contains results from all the pools in the choosen route
-    }
-
-    function _depositFeeIntoProtocolTreasury(
-        uint256 _totalFee,
-        address _protocolTreasuryAddress,
-        address _depositAssetAddress
-    ) internal {
-        IERC20(_depositAssetAddress).safeTransferFrom(
-            address(this),
-            _protocolTreasuryAddress,
-            _totalFee
-        );
     }
 }

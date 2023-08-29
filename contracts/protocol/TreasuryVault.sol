@@ -3,10 +3,14 @@ pragma solidity 0.8.21;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TreasuryVault is Ownable {
+    using SafeERC20 for IERC20;
+
     event TreasuryCreated(address creator, address treasuryAddress);
     event EtherReceived(address indexed sender, uint256 amount);
+    event ERC20Received(address indexed sender, uint256 amount, address asset);
     event NativeWithdrawal(address indexed owner, uint256 amount);
     event ERC20Withdrawal(
         address indexed owner,
@@ -27,6 +31,11 @@ contract TreasuryVault is Ownable {
         (bool success, ) = owner().call{value: _amount}("");
         require(success, "Ether transfer failed");
         emit NativeWithdrawal(owner(), _amount);
+    }
+
+    function depositERC20(uint256 _amount, address _asset) public {
+        IERC20(_asset).safeTransferFrom(msg.sender, address(this), _amount);
+        emit ERC20Received(msg.sender, _amount, _asset);
     }
 
     function withdrawERC20(

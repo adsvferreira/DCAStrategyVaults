@@ -43,7 +43,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
     uint8 public constant MAX_NUMBER_OF_BUY_ASSETS = 10;
 
-    address[] public buyAssetAddresses;
+    address[] public buyAssetAddresses; //Not required - remove
     uint8[] public buyAssetsDecimals;
     uint256 public buyAssetsLength;
     uint256 public lastUpdate;
