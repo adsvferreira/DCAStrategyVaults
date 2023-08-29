@@ -1,5 +1,5 @@
 from brownie import accounts, config
-from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault
+from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault, StrategyWorker, Controller, StrategiesTreasuryVault
 # Goerli testing addresses (old):
 # Treasury: 0x964FF99Ff53DbAaCE609eB2dA09953F9b9CAeec3
 # Factory: 0x3bBc24e06285E4229d25c1a7b1BcaB9482F1288c
@@ -12,6 +12,7 @@ from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault
 
 # dev_wallet = accounts[0]
 dev_wallet = accounts.add(config["wallets"]["from_key_1"])
+dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
 
 # # MAINNET ADDRESSES:
 # usdc_address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
@@ -32,13 +33,25 @@ treasury_fixed_fee_on_vault_creation =  1_000_000_000_000_000 #0.01 ETH
 creator_percentage_fee_on_deposit = 25 #0.25%
 treasury_percentage_fee_on_balance_update = 25 #0.25
 
+# PROTOCOL TREASURY
 tx1=TreasuryVault.deploy({'from': dev_wallet}) # owner must be protocol EOA
 # TreasuryVault.deploy({'from': dev_wallet}, publish_source=true)
 treasury_vault = TreasuryVault[-1]
 treasury_address = treasury_vault.address
 
+# CONTROLLER
+tx2 = Controller.deploy({'from': dev_wallet})
+controller = Controller[-1]
+controller_address = controller.address 
+
+# STRATEGY WORKER
+dex_router_address = "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Trader Joe
+tx3 = StrategyWorker.deploy(dex_router_address, controller_address, {'from': dev_wallet})
+strategy_worker = StrategyWorker[-1]
+strategy_worker_address = strategy_worker.address
+
 # AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet}, publish_source=true)
-tx2=AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet})
+tx4=AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet})
 
 vaults_factory = AutomatedVaultsFactory[-1]
 
@@ -46,12 +59,12 @@ vaults_factory = AutomatedVaultsFactory[-1]
 vaults_factory.allVaultsLength()
 
 init_vault_from_factory_params=(vault_name, vault_symbol, usdc_address, [weth_address, wbtc_address])
-strategy_params=([100_000, 100_000], 0, 0) #Amounts in USDC 
+strategy_params=([100_000, 100_000], 0, 0, strategy_worker_address) #Amounts in USDC 
 # Remix formated params:
 # ["weth/wbtc vault", "WETH/WBTC", "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"]]
 # [[1000000000000000000,10000000],0,0]
 
-tx3=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
+tx5=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
 
 protocol_treasury_balance = treasury_vault.balance()
 print("TREASURY BALANCE: ", protocol_treasury_balance)
@@ -70,21 +83,21 @@ usdc_dev_balance = usdc.balanceOf(dev_wallet)
 print("USDC DEV BALANCE:", usdc_dev_balance)
 
 # APROVE ERC-20
-tx4 = usdc.approve(created_strategy_vault_address, 100000, {'from': dev_wallet})
+tx6 = usdc.approve(created_strategy_vault_address, 100000, {'from': dev_wallet})
 # tx2.wait(1)  # Wait for 1 confirmation
 
 # CREATOR DEPOSIT
-tx5=created_strategy_vault.deposit(20000, dev_wallet.address, {'from': dev_wallet})
+tx7=created_strategy_vault.deposit(20000, dev_wallet.address, {'from': dev_wallet})
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
 
 # WITHDRAW
-tx6=created_strategy_vault.withdraw(10000, dev_wallet, dev_wallet, {'from': dev_wallet})
+tx8=created_strategy_vault.withdraw(10000, dev_wallet, dev_wallet, {'from': dev_wallet})
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
 
 # NON-CREATOR DEPOSIT/ ARBITRUM
-dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
+
 # usdc = Contract.from_explorer(usdc_address)
 # usdc_dev_balance = usdc.balanceOf(dev_wallet_2)
 # # vaults_factory_address = "0x87899933E5E989Ae4F028FD09D77E47F8912D229"
@@ -100,22 +113,26 @@ dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
 # created_strategy_vault_address = factory.allVaults(1)
 # created_strategy_vault = AutomatedVaultERC4626.at(created_strategy_vault_address)
 # # created_strategy_vault = Contract.from_abi("AutomatedVaultERC4626", created_strategy_vault_address, vault_abi)
-tx7 = usdc.approve(created_strategy_vault_address, 200000, {'from': dev_wallet_2})
-tx8=created_strategy_vault.deposit(100000, dev_wallet_2.address, {'from': dev_wallet_2})
+tx9 = usdc.approve(created_strategy_vault_address, 200000, {'from': dev_wallet_2})
+tx10=created_strategy_vault.deposit(100000, dev_wallet_2.address, {'from': dev_wallet_2})
 created_strategy_vault.balanceOf(dev_wallet_2)
 created_strategy_vault.balanceOf(dev_wallet)
 
 # WITHDRAW PROTOCOL TREASURY BALANCE (OWNER)
-tx9 = treasury_vault.withdrawNative(protocol_treasury_balance, {'from': dev_wallet})
+tx11 = treasury_vault.withdrawNative(protocol_treasury_balance, {'from': dev_wallet})
 print("TREASURY BALANCE: ", treasury_vault.balance())
 
 
-# TODO: 
-# 1 - Transfer Ether + USDC to testing wallet -> Settup testing wallet in .env - OK
-# 2 - Test non-creator enter strategy + fee to creator - overflow error -> Comment hook line by line until found bug origin
-# 3 - Fix Bug BuyAssets = []
-# 4 - Test withdraw from treasury and withdraw in mainnet 
 
+
+
+
+
+
+
+
+
+# ABI LIST:
 vault_abi = [
     {
       "inputs": [

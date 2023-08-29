@@ -18,7 +18,7 @@ contract StrategyWorker {
 
     address public dexRouter;
     address public controller;
-    address public strategiesTreasuryVault;
+    // address public strategiesTreasuryVault;
 
     event StrategyActionExecuted(
         address indexed vault,
@@ -30,14 +30,9 @@ contract StrategyWorker {
         uint256 feeAmount
     );
 
-    constructor(
-        address _dexRouter,
-        address _controller,
-        address _strategiesTreasuryVault
-    ) {
-        controller = _controller;
+    constructor(address _dexRouter, address _controller) {
         dexRouter = _dexRouter;
-        strategiesTreasuryVault = _strategiesTreasuryVault;
+        controller = _controller;
     }
 
     modifier onlyController() {
@@ -93,6 +88,7 @@ contract StrategyWorker {
         );
 
         uint256[] memory _swappedAssetAmounts = _swapTokens(
+            _depositorAddress,
             _depositAsset,
             _buyAssets,
             _buyAmountsAfterFee
@@ -164,6 +160,7 @@ contract StrategyWorker {
     }
 
     function _swapTokens(
+        address _depositorAddress,
         address _depositAsset,
         address[] memory _buyAssets,
         uint256[] memory _buyAmountsAfterFee
@@ -172,6 +169,7 @@ contract StrategyWorker {
         _amountsOut = new uint256[](_buyAssetsLength);
         for (uint256 i = 0; i < _buyAssets.length; i++) {
             uint256 amountOut = _swapToken(
+                _depositorAddress,
                 _depositAsset,
                 _buyAssets[i],
                 _buyAmountsAfterFee[i]
@@ -181,6 +179,7 @@ contract StrategyWorker {
     }
 
     function _swapToken(
+        address _depositorAddress,
         address _depositAsset,
         address _buyAsset,
         uint256 _buyAmountAfterFee
@@ -201,7 +200,8 @@ contract StrategyWorker {
                 _buyAmountAfterFee,
                 0, // AmountOutMin (set to 0 for simplicity)
                 _path,
-                strategiesTreasuryVault, // swapped tokens sent directly ro strategy treasury
+                // strategiesTreasuryVault, // swapped tokens sent directly to strategy treasury
+                _depositorAddress, // swapped tokens sent directly to vault depositor
                 block.timestamp
             );
         uint256 _amountsOutLength = _amountsOut.length;
