@@ -1,6 +1,6 @@
 import sys
 from brownie import accounts, config
-from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault, StrategyWorker, Controller, StrategiesTreasuryVault
+from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault, StrategyWorker, Controller
 
 # Goerli testing addresses (old):
 # Treasury: 0x964FF99Ff53DbAaCE609eB2dA09953F9b9CAeec3
@@ -144,11 +144,9 @@ print("VAULT DEPOSITOR BALANCES AFTER ACTION:")
 print(f"WETH: {weth.balanceOf(dev_wallet_2)}")
 print(f"ARB: {arb.balanceOf(dev_wallet_2)}")
 
-# TODO: 
-# 1 - strategyWorker approve only if not yet done
-# 2 - Add events for treasuryFeeTransfered (Factory, Worker)
-# 3 - Remove buyAssetAddresses from vault state
-# 4 - Improve swap path (now a pool between two assets needs to exist)
+# TODO (Future Improvements): 
+# 1 - Improve swap path (now a pool between two assets needs to exist)
+# 2 - Create Vault view function for vaults where user has balance
 
 
 

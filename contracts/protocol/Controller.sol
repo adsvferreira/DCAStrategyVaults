@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
+/**
+ * @title   Strategy Controller.
+ * @author  André Ferreira
+
+  * @dev    VERSION: 1.0
+ *          DATE:    2023.08.29
+*/
+
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {StrategyWorker} from "./StrategyWorker.sol";
 

@@ -8,13 +8,6 @@ pragma solidity 0.8.21;
  *          DATE:    2023.08.15
  */
 
-/**
-TODO:
-Guarantee that only factory can instaciate vault(in vault) - OK
-Implement remaining univ2 usuful features and vault indexing by user - OK
-Check if new vault addresses are not colliding
- */
-
 import {Enums} from "../libraries/types/Enums.sol";
 import {ConfigTypes} from "../libraries/types/ConfigTypes.sol";
 import {AutomatedVaultERC4626, IAutomatedVaultERC4626, IERC20} from "./AutomatedVaultERC4626.sol";
@@ -38,8 +31,6 @@ contract AutomatedVaultsFactory {
 
     address[] public allVaults;
     mapping(address => address[]) public getUserVaults;
-
-    // mapping(address => bool) public isVaultCreated;
 
     constructor(
         address payable _treasury,
@@ -165,38 +156,4 @@ contract AutomatedVaultsFactory {
             getUserVaults[creator].push(newVault);
         }
     }
-
-    // Add to createVault in case of address collision:
-    // bytes memory bytecode = type(AutomatedVaultERC4626).creationCode;
-    // address newVaultAddress = _generateAddress(
-    //     bytecode,
-    //     initMultiAssetVaultParams.creator,
-    //     address(initMultiAssetVaultParams.depositAsset),
-    //     strategyParams.buyAmounts,
-    //     strategyParams.buyFrequency,
-    //     strategyParams.strategyType
-    // );
-    // transfer fixed fee to treasury address
-
-    // function _generateAddress(
-    //     bytes memory bytecode,
-    //     address creator,
-    //     address underlyingAsset,
-    //     uint256[] memory buyAmounts,
-    //     Enums.BuyFrequency buyFrequency,
-    //     Enums.StrategyType strategyType
-    // ) private pure returns (address) {
-    //     bytes32 salt = keccak256(
-    //         abi.encodePacked(
-    //             bytecode,
-    //             creator,
-    //             underlyingAsset,
-    //             buyAmounts,
-    //             uint256(buyFrequency),
-    //             uint256(strategyType)
-    //         )
-    //     );
-    //     address generatedAddress = address(uint160(uint256(salt)));
-    //     return generatedAddress;
-    // }
 }

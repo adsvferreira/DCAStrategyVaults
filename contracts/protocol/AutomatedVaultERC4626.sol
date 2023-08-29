@@ -11,20 +11,6 @@ pragma solidity 0.8.21;
  *          DATE:    2023.08.13
 */
 
-/**
-
-TODO:
-- implements most of the ERC4626 functions - OK
-- %treasury fee must de set in constructor - OK
-- controller address set in constructor - OK
-- router address set in constructor - OK
-- accrues fees to creator in each deposit of others - OK
-- accrues fees to Treasury in vault creation - fixed amount - TODO - implement at factory level (transfer in constructor is bad) - OK
-- only factory can instanciate - OK
-- give allowance to worker to spend all deposits - Allowance given by the user. Flow: 1-create vault/2-deposit underlying/3-allow worker to spend all lp's
-- transfer fees to treasury in each worker interaction (withdraw) - TODO  - implement at worker level
-*/
-
 import {Enums} from "../libraries/types/Enums.sol";
 import {ConfigTypes} from "../libraries/types/ConfigTypes.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -43,7 +29,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
     uint8 public constant MAX_NUMBER_OF_BUY_ASSETS = 10;
 
-    address[] public buyAssetAddresses; //Not required - remove
+    address[] public buyAssetAddresses;
     uint8[] public buyAssetsDecimals;
     uint256 public buyAssetsLength;
     uint256 public lastUpdate;

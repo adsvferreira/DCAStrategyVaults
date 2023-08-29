@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
+/**
+ * @title   Strategy Worker.
+ * @author  André Ferreira
+
+  * @dev    VERSION: 1.0
+ *          DATE:    2023.08.29
+*/
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {TreasuryVault} from "./TreasuryVault.sol";
-import {StrategiesTreasuryVault} from "./StrategiesTreasuryVault.sol";
 import {AutomatedVaultERC4626, IAutomatedVaultERC4626, IERC20} from "./AutomatedVaultERC4626.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PercentageMath} from "../libraries/math/percentageMath.sol";
@@ -41,12 +48,6 @@ contract StrategyWorker {
     }
 
     function executeStrategyAction(
-        // 1 - Withdraw from vault (after wallet gives allowance) - OK -> TRY TO ALLOW DIRECTLY IN DEPOSIT
-        // 2 - Executes a swap in the defined dex for each buyToken/amount
-        // 3 - Deposits every swapped token into StrategiesTreasuryVault (Subtracted protocol fee)
-        // 4 - Sends protocol fee to TreasuryVault
-        // 5 - Updates vault lastUpdate
-        // Emits event strategyActionExecuted
         address _strategyVaultAddress,
         address _depositorAddress
     ) external onlyController {
@@ -88,18 +89,14 @@ contract StrategyWorker {
             _depositorAddress //owner
         );
 
-        IERC20(_depositAsset).approve(dexRouter, type(uint256).max);
+        address[2] memory spenders = [dexRouter, _protocolTreasuryAddress];
+        _ensureApprovedERC20(_depositAsset, spenders);
 
         uint256[] memory _swappedAssetAmounts = _swapTokens(
             _depositorAddress,
             _depositAsset,
             _buyAssets,
             _buyAmountsAfterFee
-        );
-
-        IERC20(_depositAsset).approve(
-            _protocolTreasuryAddress,
-            type(uint256).max
         );
 
         TreasuryVault(_protocolTreasuryAddress).depositERC20(
@@ -203,5 +200,22 @@ contract StrategyWorker {
             );
         uint256 _amountsOutLength = _amountsOut.length;
         _amountOut = _amountsOut[_amountsOutLength - 1]; // amounts out contains results from all the pools in the choosen route
+    }
+
+    function _ensureApprovedERC20(
+        address tokenAddress,
+        address[2] memory spenders
+    ) private {
+        IERC20 token = IERC20(tokenAddress);
+
+        for (uint256 i = 0; i < spenders.length; i++) {
+            uint256 currentAllowance = token.allowance(
+                address(msg.sender),
+                spenders[i]
+            );
+            if (currentAllowance == 0) {
+                token.approve(spenders[i], type(uint256).max);
+            }
+        }
     }
 }
