@@ -2,4 +2,4 @@
 
 ## Architecture Diagram
 
-![Architecture Diagram](docs/architecture_diagram_3.png)
+![Architecture Diagram](docs/architecture_diagram.png)
