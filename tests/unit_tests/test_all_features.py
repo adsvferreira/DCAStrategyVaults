@@ -1,3 +1,4 @@
+import sys
 from brownie import accounts, config
 from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault, StrategyWorker, Controller, StrategiesTreasuryVault
 # Goerli testing addresses (old):
@@ -113,14 +114,25 @@ created_strategy_vault.totalSupply()
 # created_strategy_vault_address = factory.allVaults(1)
 # created_strategy_vault = AutomatedVaultERC4626.at(created_strategy_vault_address)
 # # created_strategy_vault = Contract.from_abi("AutomatedVaultERC4626", created_strategy_vault_address, vault_abi)
-tx9 = usdc.approve(created_strategy_vault_address, 200000, {'from': dev_wallet_2})
-tx10=created_strategy_vault.deposit(100000, dev_wallet_2.address, {'from': dev_wallet_2})
+tx9 = usdc.approve(created_strategy_vault_address, 300000, {'from': dev_wallet_2})
+tx10=created_strategy_vault.deposit(300000, dev_wallet_2.address, {'from': dev_wallet_2})
 created_strategy_vault.balanceOf(dev_wallet_2)
 created_strategy_vault.balanceOf(dev_wallet)
 
 # WITHDRAW PROTOCOL TREASURY BALANCE (OWNER)
 tx11 = treasury_vault.withdrawNative(protocol_treasury_balance, {'from': dev_wallet})
 print("TREASURY BALANCE: ", treasury_vault.balance())
+
+# TEST STRATEGY WORKER
+created_strategy_vault.balanceOf(dev_wallet)
+created_strategy_vault.balanceOf(dev_wallet_2)
+
+# USER NEEDS TO GIVE ALLOWANCE TO WORKER FOR USING VAULT LP BALANCES
+tx12 = created_strategy_vault.approve(strategy_worker_address, sys.maxsize, {'from': dev_wallet})
+
+# BOTH HAVE BALANCE - EXECUTE STRATEGY ACTION FOR dev_wallet_2
+tx12 = controller.triggerStrategyAction(strategy_worker_address, created_strategy_vault_address, dev_wallet_2, {'from': dev_wallet})
+
 
 
 
