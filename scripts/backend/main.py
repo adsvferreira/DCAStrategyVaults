@@ -13,7 +13,7 @@ def main():
     all_vault_addresses=strategy_fetcher.fetch_vault_addresses()
     print("ALL VAULT ADDRESSES:", all_vault_addresses)
     all_vaults = strategy_fetcher.fetch_vaults(all_vault_addresses)
-    print("ALL VAULTS:", all_vaults)
+    # print("ALL VAULTS:", all_vaults)
 
     print("UPDATING STRATEGY VAULTS...")
 
@@ -21,8 +21,11 @@ def main():
         for depositor_address in vault.depositor_addresses:
             try:
                 tx = controller_executor.trigger_strategy_action(vault.address, depositor_address)
-                print(f"VAULT ({depositor_address}) BALANCES SWAPPED AND SENT TO DESTINATION WALLET")
+                print(f"WALLET: {depositor_address} BALANCES SWAPPED AND SENT TO DESTINATION WALLET")
             except Exception:
-                print(f"TRANSACTION FAILED: VAULT - {vault}")
+                print(f"TRANSACTION FAILED FOR WALLET: {depositor_address}")
+            print("VAULT DETAILS:")
+            print(vault)
+            print()
             tx.wait(1)
     print("STRATEGY VAULTS UPDATED!!!!!")
