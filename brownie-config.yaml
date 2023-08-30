@@ -16,6 +16,8 @@ networks:
   arbitrum-main-fork:
     verify: False
     dex_router_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Trader Joe
+    vaults_factory_address: "0x5d2ffdb504ea97c191deeeda364832b1cc72246f"
   arbitrum-main:
     verify: True
     dex_router_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Trader Joe
+    vaults_factory_address: "0x5d2ffdb504ea97c191deeeda364832b1cc72246f"
