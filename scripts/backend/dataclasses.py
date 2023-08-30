@@ -4,7 +4,6 @@ from dataclasses import dataclass
 @dataclass
 class StrategyVault:
     address:str
-    is_active: bool
     creator: str
     deposit_token_address: str
     token_addresses_to_buy: List[str]

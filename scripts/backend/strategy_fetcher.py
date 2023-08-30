@@ -1,19 +1,10 @@
 from typing import List, Union
 from scripts.backend.dataclasses import StrategyVault
-from brownie import accounts, config, AutomatedVaultERC4626, AutomatedVaultsFactory, network, ConfigTypes
+from scripts.backend.helpers import buy_frequency_enum_to_seconds_map
+from brownie import config, AutomatedVaultERC4626, AutomatedVaultsFactory, network
 
-BACKEND_BOT_WALLET = accounts.add(config["wallets"]["from_key_1"])
 factory_address = config["networks"][network.show_active()]["vaults_factory_address"]
 vaults_factory_contract = AutomatedVaultsFactory.at(factory_address)
-
-buy_frequency_enum_to_seconds_map = {
-    0: 60, # TODO: Change After Testing -> This one should be 86400 (DAILY)
-    1: 604800, # WEEKLY
-    2: 1209600, # BI_WEEKLY
-    3: 2630016 # MONTHLY (Assumes average of 30.44 days in month)
-}
-
-# dataclass Vault
 
 class StrategyFetcher:
 
@@ -39,7 +30,6 @@ class StrategyFetcher:
                 all_depositors_length = vault_contract.allDepositorsLength()
                 vault = StrategyVault(
                     address = vault_contract.address,
-                    is_active=vault_params[5],
                     creator=vault_params[3],
                     deposit_token_address=vault_params[6],
                     token_addresses_to_buy=self.__get_token_addresses_to_buy(vault_contract, token_addresses_to_buy_length),
