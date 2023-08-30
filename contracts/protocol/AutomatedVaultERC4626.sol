@@ -33,6 +33,8 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
     uint8[] public buyAssetsDecimals;
     uint256 public buyAssetsLength;
     uint256 public lastUpdate;
+    address[] public allDepositorAddresses;
+    uint256 public allDepositorsLength;
 
     event CreatorFeeTransfered(
         address indexed vault,
@@ -219,6 +221,10 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
     ) internal {
         if (receiver == initMultiAssetVaultParams.creator) {
             _mint(receiver, shares);
+            if (balanceOf(receiver) == shares) {
+                allDepositorAddresses.push(receiver);
+            }
+            allDepositorsLength = allDepositorAddresses.length;
         } else {
             // if deposit is not from vault creator, a fee will be removed
             // from depositor and added to creator balance
@@ -239,7 +245,14 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
                 creatorShares
             );
             _mint(receiver, depositorShares);
+            if (balanceOf(receiver) == depositorShares) {
+                allDepositorAddresses.push(receiver);
+            }
             _mint(initMultiAssetVaultParams.creator, creatorShares);
+            if (balanceOf(initMultiAssetVaultParams.creator) == creatorShares) {
+                allDepositorAddresses.push(initMultiAssetVaultParams.creator);
+            }
+            allDepositorsLength = allDepositorAddresses.length;
         }
     }
 }

@@ -93,6 +93,8 @@ tx6 = usdc.approve(created_strategy_vault_address, 100000, {'from': dev_wallet})
 tx7=created_strategy_vault.deposit(20000, dev_wallet.address, {'from': dev_wallet})
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
+created_strategy_vault.allDepositorsLength()
+created_strategy_vault.allDepositorAddresses(0)
 
 # WITHDRAW
 tx8=created_strategy_vault.withdraw(10000, dev_wallet, dev_wallet, {'from': dev_wallet})
@@ -106,6 +108,9 @@ tx9 = usdc.approve(created_strategy_vault_address, 300000, {'from': dev_wallet_2
 tx10=created_strategy_vault.deposit(300000, dev_wallet_2.address, {'from': dev_wallet_2})
 created_strategy_vault.balanceOf(dev_wallet_2)
 created_strategy_vault.balanceOf(dev_wallet)
+created_strategy_vault.allDepositorsLength()
+created_strategy_vault.allDepositorAddresses(0)
+created_strategy_vault.allDepositorAddresses(1)
 
 # WITHDRAW PROTOCOL TREASURY BALANCE (OWNER)
 tx11 = treasury_vault.withdrawNative(protocol_treasury_balance, {'from': dev_wallet})
