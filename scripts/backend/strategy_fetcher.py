@@ -21,7 +21,6 @@ class StrategyFetcher:
             for vault_address in vault_addresses:
                 vault_contract = AutomatedVaultERC4626.at(vault_address)
                 strategy_params = vault_contract.getStrategyParams()
-                print("STRATEGY PARAMS:", strategy_params)
                 if buy_frequency_timestamp and buy_frequency_timestamp != vault_buy_frequency_timestamp:
                     continue
                 vault_buy_frequency_timestamp=self.__get_vault_buy_frequency_timestamp(strategy_params)
