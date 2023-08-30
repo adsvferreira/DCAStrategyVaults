@@ -1,2 +1,3 @@
 def main():
-    pass
+    while True:
+        pass
