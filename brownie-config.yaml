@@ -10,3 +10,12 @@ wallets:
   from_key_1: ${PRIVATE_KEY_1}
   from_key_2: ${PRIVATE_KEY_2}
   # from_key: ${PRIVATE_KEY}
+networks:
+  development:
+    verify: False
+  arbitrum-main-fork:
+    verify: False
+    dex_router_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Trader Joe
+  arbitrum-main:
+    verify: True
+    dex_router_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Trader Joe

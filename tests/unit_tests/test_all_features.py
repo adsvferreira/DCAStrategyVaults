@@ -34,7 +34,7 @@ arb_address = "0x912ce59144191c1204e64559fe8253a0e49e6548"
 
 treasury_fixed_fee_on_vault_creation =  1_000_000_000_000_000 #0.01 ETH
 creator_percentage_fee_on_deposit = 25 #0.25%
-treasury_percentage_fee_on_balance_update = 25 #0.25
+treasury_percentage_fee_on_balance_update = 25 #0.25%
 
 # PROTOCOL TREASURY
 tx1=TreasuryVault.deploy({'from': dev_wallet}) # owner must be protocol EOA
@@ -99,24 +99,10 @@ tx8=created_strategy_vault.withdraw(10000, dev_wallet, dev_wallet, {'from': dev_
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
 
-# NON-CREATOR DEPOSIT/ ARBITRUM
-
-# usdc = Contract.from_explorer(usdce_address)
-# usdc_dev_balance = usdc.balanceOf(dev_wallet_2)
-# # vaults_factory_address = "0x87899933E5E989Ae4F028FD09D77E47F8912D229"
-# # factory = Contract.from_abi("AutomatedVaultsFactory", vaults_factory_address, factory_abi)
-# tx0=AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet})
-
-# vaults_factory = AutomatedVaultsFactory[-1]
-
-# init_vault_from_factory_params=(vault_name, vault_symbol, usdce_address, [weth_address, wbtc_address])
-# strategy_params=([1_000_000_000_000_000_000, 10_000_000], 0, 0)
-
-# tx1=factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
-# created_strategy_vault_address = factory.allVaults(1)
-# created_strategy_vault = AutomatedVaultERC4626.at(created_strategy_vault_address)
-# # created_strategy_vault = Contract.from_abi("AutomatedVaultERC4626", created_strategy_vault_address, vault_abi)
+# APROVE ERC-20
 tx9 = usdc.approve(created_strategy_vault_address, 300000, {'from': dev_wallet_2})
+
+# NON-CREATOR DEPOSIT
 tx10=created_strategy_vault.deposit(300000, dev_wallet_2.address, {'from': dev_wallet_2})
 created_strategy_vault.balanceOf(dev_wallet_2)
 created_strategy_vault.balanceOf(dev_wallet)
@@ -132,13 +118,13 @@ created_strategy_vault.balanceOf(dev_wallet_2)
 # USER NEEDS TO GIVE UNLIMITED ALLOWANCE TO WORKER FOR USING VAULT LP BALANCES
 tx12 = created_strategy_vault.approve(strategy_worker_address, sys.maxsize, {'from': dev_wallet_2})
 
-
 weth = Contract.from_explorer(weth_address)
 arb = Contract.from_explorer(arb_address)
 print("VAULT DEPOSITOR BALANCES BEFORE ACTION:")
 print(f"WETH: {weth.balanceOf(dev_wallet_2)}")
 print(f"ARB: {arb.balanceOf(dev_wallet_2)}")
-# BOTH HAVE BALANCE - EXECUTE STRATEGY ACTION FOR dev_wallet_2
+
+# EXECUTE STRATEGY ACTION FOR dev_wallet_2
 tx13 = controller.triggerStrategyAction(strategy_worker_address, created_strategy_vault_address, dev_wallet_2, {'from': dev_wallet})
 print("VAULT DEPOSITOR BALANCES AFTER ACTION:")
 print(f"WETH: {weth.balanceOf(dev_wallet_2)}")
@@ -155,9 +141,7 @@ print(f"ARB: {arb.balanceOf(dev_wallet_2)}")
 
 
 
-
-
-# ABI LIST:
+# ABI LIST (OLD):
 vault_abi = [
     {
       "inputs": [
@@ -1490,3 +1474,20 @@ treasury_abi = [
       "type": "receive"
     }
   ]
+
+
+# usdc = Contract.from_explorer(usdce_address)
+# usdc_dev_balance = usdc.balanceOf(dev_wallet_2)
+# # vaults_factory_address = "0x87899933E5E989Ae4F028FD09D77E47F8912D229"
+# # factory = Contract.from_abi("AutomatedVaultsFactory", vaults_factory_address, factory_abi)
+# tx0=AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet})
+
+# vaults_factory = AutomatedVaultsFactory[-1]
+
+# init_vault_from_factory_params=(vault_name, vault_symbol, usdce_address, [weth_address, wbtc_address])
+# strategy_params=([1_000_000_000_000_000_000, 10_000_000], 0, 0)
+
+# tx1=factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
+# created_strategy_vault_address = factory.allVaults(1)
+# created_strategy_vault = AutomatedVaultERC4626.at(created_strategy_vault_address)
+# # created_strategy_vault = Contract.from_abi("AutomatedVaultERC4626", created_strategy_vault_address, vault_abi)
