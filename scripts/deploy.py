@@ -8,7 +8,7 @@ def main():
     print(CONSOLE_SEPARATOR)
     print("CURRENT NETWORK: ",network.show_active())
     print(CONSOLE_SEPARATOR)
-    dev_wallet = accounts.add(config["wallets"]["from_key_2"])
+    dev_wallet = accounts.add(config["wallets"]["from_key_1"])
     print(f"WALLET USED FOR DEPLOYMENT: {dev_wallet.address}")
     dex_router_address = config["networks"][network.show_active()]["dex_router_address"]
     verify_flag  = config["networks"][network.show_active()]["verify"]
