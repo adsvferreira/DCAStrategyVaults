@@ -277,7 +277,7 @@ contract StrategyWorker {
     function _getIndirectPath(
         address _depositAsset,
         address _buyAsset
-    ) private returns (address[] memory) {
+    ) private view returns (address[] memory) {
         address[] memory _path = new address[](3);
         _path[0] = _depositAsset;
         _path[1] = dexMainToken;

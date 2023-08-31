@@ -11,11 +11,12 @@ def main():
     dev_wallet = accounts.add(config["wallets"]["from_key_1"])
     print(f"WALLET USED FOR DEPLOYMENT: {dev_wallet.address}")
     dex_router_address = config["networks"][network.show_active()]["dex_router_address"]
+    dex_factory_address = config["networks"][network.show_active()]["dex_factory_address"]
     dex_main_token_address = config["networks"][network.show_active()]["dex_main_token_address"]
     verify_flag  = config["networks"][network.show_active()]["verify"]
     
     # SETUP
-    treasury_fixed_fee_on_vault_creation =  1_000_000_000_000_000 #0.01 ETH
+    treasury_fixed_fee_on_vault_creation =  100_000_000_000_000 #0.001 ETH
     creator_percentage_fee_on_deposit = 25 #0.25%
     treasury_percentage_fee_on_balance_update = 25 #0.25%
 
@@ -37,4 +38,4 @@ def main():
 
     print(CONSOLE_SEPARATOR)
     print("STRATEGY VAULTS FACTORY DEPLOYMENT:")
-    tx4=AutomatedVaultsFactory.deploy(treasury_address,treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet}, publish_source=verify_flag)
+    tx4=AutomatedVaultsFactory.deploy(dex_factory_address, dex_main_token_address, treasury_address, treasury_fixed_fee_on_vault_creation, creator_percentage_fee_on_deposit, treasury_percentage_fee_on_balance_update, {'from': dev_wallet}, publish_source=verify_flag)

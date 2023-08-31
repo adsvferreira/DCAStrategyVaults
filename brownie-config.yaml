@@ -16,6 +16,7 @@ networks:
   arbitrum-main-fork:
     verify: False
     dex_router_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Sushi
+    dex_factory_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Sushi
     dex_main_token_address: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1" # WETH
     vaults_factory_address: "0x5d2ffdb504ea97c191deeeda364832b1cc72246f"
     controller_address: "0x3058ff7580913561fED8b14CC0C464Be7e75A6B3"
@@ -23,6 +24,7 @@ networks:
   arbitrum-main:
     verify: True
     dex_router_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Sushi
+    dex_factory_address: "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Sushi
     dex_main_token_address: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1" # WETH
     vaults_factory_address: "0x5d2ffdb504ea97c191deeeda364832b1cc72246f"
     controller_address: "0x3058ff7580913561fED8b14CC0C464Be7e75A6B3"
