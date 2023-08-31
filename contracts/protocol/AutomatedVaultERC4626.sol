@@ -220,10 +220,10 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         uint256 shares
     ) internal {
         if (receiver == initMultiAssetVaultParams.creator) {
-            _mint(receiver, shares);
-            if (balanceOf(receiver) == shares) {
+            if (balanceOf(receiver) == 0) {
                 allDepositorAddresses.push(receiver);
             }
+            _mint(receiver, shares);
             allDepositorsLength = allDepositorAddresses.length;
         } else {
             // if deposit is not from vault creator, a fee will be removed
@@ -244,14 +244,14 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
                 receiver,
                 creatorShares
             );
-            _mint(receiver, depositorShares);
-            if (balanceOf(receiver) == depositorShares) {
+            if (balanceOf(receiver) == 0) {
                 allDepositorAddresses.push(receiver);
             }
-            _mint(initMultiAssetVaultParams.creator, creatorShares);
-            if (balanceOf(initMultiAssetVaultParams.creator) == creatorShares) {
+            _mint(receiver, depositorShares);
+            if (balanceOf(initMultiAssetVaultParams.creator) == 0) {
                 allDepositorAddresses.push(initMultiAssetVaultParams.creator);
             }
+            _mint(initMultiAssetVaultParams.creator, creatorShares);
             allDepositorsLength = allDepositorAddresses.length;
         }
     }
