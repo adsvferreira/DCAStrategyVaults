@@ -1,5 +1,5 @@
 import sys
-from brownie import accounts, config
+from brownie import accounts, config, network
 from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault, StrategyWorker, Controller
 
 # Goerli testing addresses (old):
@@ -31,8 +31,8 @@ weth_address = "0x82af49447d8a07e3bd95bd0d56f35241523fbab1"
 wbtc_address = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f"
 arb_address = "0x912ce59144191c1204e64559fe8253a0e49e6548"
 lon_address = "0x55678cd083fcdc2947a0df635c93c838c89454a3"
-dex_router_address = "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506" # ARBITRUM Sushi
-dex_factory_address = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4" # ARBITRUM Sushi
+dex_router_address = config["networks"][network.show_active()]["dex_router_address"] # ARBITRUM Sushi
+dex_factory_address = config["networks"][network.show_active()]["vaults_factory_address"] # ARBITRUM Sushi
 
 
 treasury_fixed_fee_on_vault_creation =  100_000_000_000_000 #0.001 ETH
@@ -69,7 +69,7 @@ strategy_params=([100_000, 100_000], 0, 0, strategy_worker_address) #Amounts in 
 # ["weth/wbtc vault", "WETH/WBTC", "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"]]
 # [[1000000000000000000,10000000],0,0]
 
-tx5=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
+tx5=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":100_000_000_000_000})
 
 protocol_treasury_balance = treasury_vault.balance()
 print("TREASURY BALANCE: ", protocol_treasury_balance)
@@ -88,7 +88,7 @@ usdc_dev_balance = usdc.balanceOf(dev_wallet)
 print("USDC DEV BALANCE:", usdc_dev_balance)
 
 # APROVE ERC-20
-tx6 = usdc.approve(created_strategy_vault_address, 100000, {'from': dev_wallet})
+tx6 = usdc.approve(created_strategy_vault_address, sys.maxsize, {'from': dev_wallet})
 # tx2.wait(1)  # Wait for 1 confirmation
 
 # CREATOR DEPOSIT
@@ -104,10 +104,10 @@ created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
 
 # APROVE ERC-20
-tx9 = usdc.approve(created_strategy_vault_address, 300000, {'from': dev_wallet_2})
+tx9 = usdc.approve(created_strategy_vault_address, sys.maxsize, {'from': dev_wallet_2})
 
 # NON-CREATOR DEPOSIT
-tx10=created_strategy_vault.deposit(300000, dev_wallet_2.address, {'from': dev_wallet_2})
+tx10=created_strategy_vault.deposit(20000, dev_wallet_2.address, {'from': dev_wallet_2})
 created_strategy_vault.balanceOf(dev_wallet_2)
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.allDepositorsLength()
@@ -139,10 +139,9 @@ print(f"ARB: {arb.balanceOf(dev_wallet_2)}")
 
 # STRATEGY VAULT CREATION FAILED DUE TO PATH NOT FOUND
 init_vault_from_factory_params=("invalid strategy", "ERROR", usdce_address, [weth_address, lon_address])
-strategy_params=([100_000, 100_000], 0, 0, strategy_worker_address) #Amounts in USDC 
+strategy_params=([100_000, 100_000], 0, 0, strategy_worker_address) #Amounts in USDC
 
-
-tx5=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
+tx14=vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":1_000_000_000_000_000})
 
 
 
