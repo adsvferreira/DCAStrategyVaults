@@ -7,6 +7,7 @@ factory_address = config["networks"][network.show_active()]["vaults_factory_addr
 vaults_factory_contract = AutomatedVaultsFactory.at(factory_address)
 
 
+
 class StrategyFetcher:
 
     def fetch_vault_addresses(self) -> List[str]:

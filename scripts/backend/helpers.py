@@ -1,3 +1,5 @@
+event_vault_creation = "VaultCreated"
+
 buy_frequency_enum_to_seconds_map = {
     0: 60,  # TODO: Change After Testing -> This one should be 86400 (DAILY)
     1: 604800,  # WEEKLY

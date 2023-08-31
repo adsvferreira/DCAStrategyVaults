@@ -63,7 +63,7 @@ vaults_factory = AutomatedVaultsFactory[-1]
 vaults_factory.allVaultsLength()
 
 init_vault_from_factory_params=(vault_name, vault_symbol, usdce_address, [weth_address, arb_address])
-strategy_params=([100_000, 100_000], 0, 0, strategy_worker_address) #Amounts in USDC 
+strategy_params=([100_0, 100_0], 0, 0, strategy_worker_address) #Amounts in USDC 
 # Remix formated params:
 # ["weth/wbtc vault", "WETH/WBTC", "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"]]
 # [[1000000000000000000,10000000],0,0]
