@@ -24,11 +24,11 @@ dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
 # wbtc_address = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
 
 # ARBITRUM MAINNET ADDRESSES (arbitrum-main-fork):
-usdce_address = "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8"
 vault_name = "weth/arb vault"
 vault_symbol = "WETH/ARB"
+usdce_address = "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8"
 weth_address = "0x82af49447d8a07e3bd95bd0d56f35241523fbab1"
-# wbtc_address = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f"
+wbtc_address = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f"
 arb_address = "0x912ce59144191c1204e64559fe8253a0e49e6548"
 
 
@@ -48,8 +48,8 @@ controller = Controller[-1]
 controller_address = controller.address 
 
 # STRATEGY WORKER
-dex_router_address = "0xbee5c10cf6e4f68f831e11c1d9e59b43560b3642" # ARBITRUM Trader Joe
-tx3 = StrategyWorker.deploy(dex_router_address, controller_address, {'from': dev_wallet})
+dex_router_address = "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506" # ARBITRUM Sushi
+tx3 = StrategyWorker.deploy(dex_router_address, weth_address, controller_address, {'from': dev_wallet})
 strategy_worker = StrategyWorker[-1]
 strategy_worker_address = strategy_worker.address
 

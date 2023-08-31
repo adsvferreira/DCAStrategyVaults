@@ -11,6 +11,7 @@ def main():
     dev_wallet = accounts.add(config["wallets"]["from_key_1"])
     print(f"WALLET USED FOR DEPLOYMENT: {dev_wallet.address}")
     dex_router_address = config["networks"][network.show_active()]["dex_router_address"]
+    dex_main_token_address = config["networks"][network.show_active()]["dex_main_token_address"]
     verify_flag  = config["networks"][network.show_active()]["verify"]
     
     # SETUP
@@ -32,8 +33,7 @@ def main():
     
     print(CONSOLE_SEPARATOR)
     print("STRATEGY WORKER DEPLOYMENT:")
-    tx3 = StrategyWorker.deploy(dex_router_address, controller_address, {'from': dev_wallet}, publish_source=verify_flag)
-    strategy_worker = StrategyWorker[-1]
+    tx3 = StrategyWorker.deploy(dex_router_address, dex_main_token_address, controller_address, {'from': dev_wallet}, publish_source=verify_flag)
 
     print(CONSOLE_SEPARATOR)
     print("STRATEGY VAULTS FACTORY DEPLOYMENT:")

@@ -23,9 +23,11 @@ contract StrategyWorker {
     using Math for uint256;
     using PercentageMath for uint256;
 
+    uint16 public constant MAX_SLIPPAGE_PERC = 5e2; // 5%
+
     address public dexRouter;
+    address public dexMainToken;
     address public controller;
-    // address public strategiesTreasuryVault;
 
     event StrategyActionExecuted(
         address indexed vault,
@@ -37,8 +39,13 @@ contract StrategyWorker {
         uint256 feeAmount
     );
 
-    constructor(address _dexRouter, address _controller) {
+    constructor(
+        address _dexRouter,
+        address _dexMainToken,
+        address _controller
+    ) {
         dexRouter = _dexRouter;
+        dexMainToken = _dexMainToken;
         controller = _controller;
     }
 
@@ -186,20 +193,58 @@ contract StrategyWorker {
         address _buyAsset,
         uint256 _buyAmountAfterFee
     ) internal returns (uint256 _amountOut) {
-        address[] memory _path = new address[](2);
-        _path[0] = _depositAsset;
-        _path[1] = _buyAsset;
+        IUniswapV2Router _dexRouterContract = IUniswapV2Router(dexRouter);
 
-        uint256[] memory _amountsOut = IUniswapV2Router(dexRouter)
-            .swapExactTokensForTokens(
-                _buyAmountAfterFee,
-                0, // AmountOutMin (set to 0 for simplicity)
-                _path,
-                _depositorAddress, // swapped tokens sent directly to vault depositor
-                block.timestamp + 600 //
+        // Only checks for _buyAsset because _depositAsset is always a stable
+        if (_buyAsset != dexMainToken) {
+            address[] memory _indirectPath = _getIndirectPath(
+                _depositAsset,
+                _buyAsset
             );
-        uint256 _amountsOutLength = _amountsOut.length;
-        _amountOut = _amountsOut[_amountsOutLength - 1]; // amounts out contains results from all the pools in the choosen route
+            uint256[] memory _minAmountsOut = _dexRouterContract.getAmountsOut(
+                _buyAmountAfterFee,
+                _indirectPath
+            );
+            uint256 _minAmountOut = _minAmountsOut[_minAmountsOut.length - 1];
+
+            uint256 _amountOutMin = _minAmountOut.percentMul(
+                PercentageMath.PERCENTAGE_FACTOR - MAX_SLIPPAGE_PERC
+            );
+
+            uint256[] memory _amountsOut = _dexRouterContract
+                .swapExactTokensForTokens(
+                    _buyAmountAfterFee,
+                    _amountOutMin,
+                    _indirectPath,
+                    _depositorAddress, // swapped tokens sent directly to vault depositor
+                    block.timestamp + 600 // 10 min max to execute
+                );
+            _amountOut = _amountsOut[_amountsOut.length - 1]; // amounts out contains results from all the pools in the choosen route
+        } else {
+            address[] memory _directPath = _getDirectPath(
+                _depositAsset,
+                _buyAsset
+            );
+            uint256[] memory _minAmountsOut = _dexRouterContract.getAmountsOut(
+                _buyAmountAfterFee,
+                _directPath
+            );
+            uint256 _minAmountOut = _minAmountsOut[_minAmountsOut.length - 1];
+
+            uint256 _amountOutMin = _minAmountOut.percentMul(
+                PercentageMath.PERCENTAGE_FACTOR - MAX_SLIPPAGE_PERC
+            );
+
+            uint256[] memory _amountsOut = _dexRouterContract
+                .swapExactTokensForTokens(
+                    _buyAmountAfterFee,
+                    _amountOutMin,
+                    _directPath,
+                    _depositorAddress, // swapped tokens sent directly to vault depositor
+                    block.timestamp + 600 // 10 min max to execute
+                );
+            _amountOut = _amountsOut[_amountsOut.length - 1]; // amounts out contains results from all the pools in the choosen route
+        }
     }
 
     function _ensureApprovedERC20(
@@ -217,5 +262,26 @@ contract StrategyWorker {
                 token.approve(spenders[i], type(uint256).max);
             }
         }
+    }
+
+    function _getDirectPath(
+        address _depositAsset,
+        address _buyAsset
+    ) private pure returns (address[] memory) {
+        address[] memory _path = new address[](2);
+        _path[0] = _depositAsset;
+        _path[1] = _buyAsset;
+        return _path;
+    }
+
+    function _getIndirectPath(
+        address _depositAsset,
+        address _buyAsset
+    ) private returns (address[] memory) {
+        address[] memory _path = new address[](3);
+        _path[0] = _depositAsset;
+        _path[1] = dexMainToken;
+        _path[2] = _buyAsset;
+        return _path;
     }
 }
