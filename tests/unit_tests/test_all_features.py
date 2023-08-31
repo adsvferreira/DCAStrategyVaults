@@ -1,4 +1,3 @@
-import sys
 from brownie import accounts, config, network
 from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault, StrategyWorker, Controller
 
@@ -32,7 +31,7 @@ wbtc_address = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f"
 arb_address = "0x912ce59144191c1204e64559fe8253a0e49e6548"
 lon_address = "0x55678cd083fcdc2947a0df635c93c838c89454a3"
 dex_router_address = config["networks"][network.show_active()]["dex_router_address"] # ARBITRUM Sushi
-dex_factory_address = config["networks"][network.show_active()]["vaults_factory_address"] # ARBITRUM Sushi
+dex_factory_address = config["networks"][network.show_active()]["dex_factory_address"] # ARBITRUM Sushi
 
 
 treasury_fixed_fee_on_vault_creation =  100_000_000_000_000 #0.001 ETH
@@ -88,11 +87,11 @@ usdc_dev_balance = usdc.balanceOf(dev_wallet)
 print("USDC DEV BALANCE:", usdc_dev_balance)
 
 # APROVE ERC-20
-tx6 = usdc.approve(created_strategy_vault_address, sys.maxsize, {'from': dev_wallet})
+tx6 = usdc.approve(created_strategy_vault_address, 100_000, {'from': dev_wallet})
 # tx2.wait(1)  # Wait for 1 confirmation
 
 # CREATOR DEPOSIT
-tx7=created_strategy_vault.deposit(20000, dev_wallet.address, {'from': dev_wallet})
+tx7=created_strategy_vault.deposit(20_000, dev_wallet.address, {'from': dev_wallet})
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
 created_strategy_vault.allDepositorsLength()
@@ -104,10 +103,10 @@ created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.totalSupply()
 
 # APROVE ERC-20
-tx9 = usdc.approve(created_strategy_vault_address, sys.maxsize, {'from': dev_wallet_2})
+tx9 = usdc.approve(created_strategy_vault_address, 3_000_000, {'from': dev_wallet_2})
 
 # NON-CREATOR DEPOSIT
-tx10=created_strategy_vault.deposit(20000, dev_wallet_2.address, {'from': dev_wallet_2})
+tx10=created_strategy_vault.deposit(300_000, dev_wallet_2.address, {'from': dev_wallet_2})
 created_strategy_vault.balanceOf(dev_wallet_2)
 created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.allDepositorsLength()
@@ -123,7 +122,7 @@ created_strategy_vault.balanceOf(dev_wallet)
 created_strategy_vault.balanceOf(dev_wallet_2)
 
 # USER NEEDS TO GIVE UNLIMITED ALLOWANCE TO WORKER FOR USING VAULT LP BALANCES
-tx12 = created_strategy_vault.approve(strategy_worker_address, sys.maxsize, {'from': dev_wallet_2})
+tx12 = created_strategy_vault.approve(strategy_worker_address, 9_999_999_999_999_999_999, {'from': dev_wallet_2})
 
 weth = Contract.from_explorer(weth_address)
 arb = Contract.from_explorer(arb_address)

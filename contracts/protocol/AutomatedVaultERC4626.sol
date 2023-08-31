@@ -222,6 +222,7 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
         if (receiver == initMultiAssetVaultParams.creator) {
             if (balanceOf(receiver) == 0) {
                 allDepositorAddresses.push(receiver);
+                allDepositorsLength += 1;
             }
             _mint(receiver, shares);
         } else {
@@ -243,11 +244,13 @@ contract AutomatedVaultERC4626 is ERC4626, IAutomatedVaultERC4626 {
 
             if (balanceOf(receiver) == 0) {
                 allDepositorAddresses.push(receiver);
+                allDepositorsLength += 1;
             }
             _mint(receiver, depositorShares);
 
             if (balanceOf(initMultiAssetVaultParams.creator) == 0) {
                 allDepositorAddresses.push(initMultiAssetVaultParams.creator);
+                allDepositorsLength += 1;
             }
             _mint(initMultiAssetVaultParams.creator, creatorShares);
         }
