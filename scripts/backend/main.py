@@ -17,7 +17,7 @@ def main():
     print("ALL VAULTS:")
     print(all_vaults)
     print(CONSOLE_SEPARATOR)
-    
+
     # # filtered vaults because of reverted transactions
     # all_vaults = [vault for vault in all_vaults if vault.address != "0xCaDf5ba5AB9Cb2f6206d98D7Ae45157D79B66A0A"]
     print("UPDATING STRATEGY VAULTS...")
@@ -37,7 +37,7 @@ def main():
     time.sleep(buy_frequency_enum_to_seconds_map[0])
 
     print("STARTING SCHEDULER...")
-    
+
     while True:
         print("STARTING NEW ITERATION...")
         current_time = time.time()

@@ -13,7 +13,7 @@ from brownie import AutomatedVaultsFactory, AutomatedVaultERC4626, TreasuryVault
 
 # dev_wallet = accounts[0]
 dev_wallet = accounts.add(config["wallets"]["from_key_1"])
-dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
+#dev_wallet_2 = accounts.add(config["wallets"]["from_key_2"])
 
 # # MAINNET ADDRESSES:
 # usdce_address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
