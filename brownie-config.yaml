@@ -10,6 +10,8 @@ wallets:
   from_key_1: ${PRIVATE_KEY_1}
   from_key_2: ${PRIVATE_KEY_2}
   # from_key: ${PRIVATE_KEY}
+rpcs:
+  infura_mainnet: ${WEB3_INFURA_PROJECT_ID}
 networks:
   development:
     verify: False
