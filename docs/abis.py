@@ -1,3 +1,347 @@
+vaults_factory_abi = [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_uniswapV2Factory",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_dexMainToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "_treasury",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_treasuryFixedFeeOnVaultCreation",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_creatorPercentageFeeOnDeposit",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_treasuryPercentageFeeOnBalanceUpdate",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "TreasuryFeeTransfered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "depositAsset",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address[]",
+          "name": "buyAssets",
+          "type": "address[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "vaultAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256[]",
+          "name": "buyAmounts",
+          "type": "uint256[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum Enums.BuyFrequency",
+          "name": "buyFrequency",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum Enums.StrategyType",
+          "name": "strategyType",
+          "type": "uint8"
+        }
+      ],
+      "name": "VaultCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_depositAsset",
+          "type": "address"
+        },
+        {
+          "internalType": "address[]",
+          "name": "_buyAssets",
+          "type": "address[]"
+        }
+      ],
+      "name": "allPairsExistForBuyAssets",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "allVaults",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "allVaultsLength",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "depositAsset",
+              "type": "address"
+            },
+            {
+              "internalType": "address[]",
+              "name": "buyAssets",
+              "type": "address[]"
+            }
+          ],
+          "internalType": "struct ConfigTypes.InitMultiAssetVaultFactoryParams",
+          "name": "initMultiAssetVaultFactoryParams",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256[]",
+              "name": "buyAmounts",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "enum Enums.BuyFrequency",
+              "name": "buyFrequency",
+              "type": "uint8"
+            },
+            {
+              "internalType": "enum Enums.StrategyType",
+              "name": "strategyType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "strategyWorker",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct ConfigTypes.StrategyParams",
+          "name": "strategyParams",
+          "type": "tuple"
+        }
+      ],
+      "name": "createVault",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "newVaultAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "creatorPercentageFeeOnDeposit",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "dexMainToken",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "getUserVaults",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_depositAsset",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_buyAsset",
+          "type": "address"
+        }
+      ],
+      "name": "pairExistsForBuyAsset",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "treasury",
+      "outputs": [
+        {
+          "internalType": "address payable",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "treasuryFixedFeeOnVaultCreation",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "treasuryPercentageFeeOnBalanceUpdate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+
 vault_abi = [
     {
       "inputs": [
