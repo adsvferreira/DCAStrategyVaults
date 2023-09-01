@@ -1,10 +1,13 @@
 from brownie import web3
-from strategy_fetcher import vaults_factory_contract
+from brownie import config, AutomatedVaultsFactory, network
+
+factory_address = config["networks"][network.show_active()]["vaults_factory_address"]
+vaults_factory_contract = AutomatedVaultsFactory.at(factory_address)
 
 
 class EventListener:
     def __init__(self):
-        self.block_number = vaults_factory_contract.tx.block_number
+        self.block_number = web3.eth.blockNumber
 
     # returns the new vaults addresses
     def event_listener_vaults_update(self) -> list[str]:
