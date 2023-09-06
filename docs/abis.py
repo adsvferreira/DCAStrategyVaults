@@ -36,16 +36,16 @@ vaults_factory_abi = [
       "type": "constructor"
     },
     {
-      "anonymous": false,
+      "anonymous": False,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "address",
           "name": "creator",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
@@ -55,46 +55,46 @@ vaults_factory_abi = [
       "type": "event"
     },
     {
-      "anonymous": false,
+      "anonymous": False,
       "inputs": [
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "creator",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "depositAsset",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "address[]",
           "name": "buyAssets",
           "type": "address[]"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "address",
           "name": "vaultAddress",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256[]",
           "name": "buyAmounts",
           "type": "uint256[]"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "enum Enums.BuyFrequency",
           "name": "buyFrequency",
           "type": "uint8"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "enum Enums.StrategyType",
           "name": "strategyType",
           "type": "uint8"
@@ -455,22 +455,22 @@ vault_abi = [
       "type": "error"
     },
     {
-      "anonymous": false,
+      "anonymous": False,
       "inputs": [
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "owner",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "spender",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "value",
           "type": "uint256"
@@ -480,28 +480,28 @@ vault_abi = [
       "type": "event"
     },
     {
-      "anonymous": false,
+      "anonymous": False,
       "inputs": [
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "vault",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "depositor",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "creator",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "shares",
           "type": "uint256"
@@ -511,28 +511,28 @@ vault_abi = [
       "type": "event"
     },
     {
-      "anonymous": false,
+      "anonymous": False,
       "inputs": [
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "sender",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "owner",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "assets",
           "type": "uint256"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "shares",
           "type": "uint256"
@@ -542,22 +542,22 @@ vault_abi = [
       "type": "event"
     },
     {
-      "anonymous": false,
+      "anonymous": False,
       "inputs": [
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "from",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "to",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "value",
           "type": "uint256"
@@ -567,34 +567,34 @@ vault_abi = [
       "type": "event"
     },
     {
-      "anonymous": false,
+      "anonymous": False,
       "inputs": [
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "sender",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "receiver",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": True,
           "internalType": "address",
           "name": "owner",
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "assets",
           "type": "uint256"
         },
         {
-          "indexed": false,
+          "indexed": False,
           "internalType": "uint256",
           "name": "shares",
           "type": "uint256"
@@ -1451,3 +1451,235 @@ vault_abi = [
       "type": "function"
     }
   ]
+
+
+erc20_abi = [
+  {
+    "constant": True,
+    "inputs": [
+      
+    ],
+    "name": "name",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": False,
+    "inputs": [
+      {
+        "name": "_spender",
+        "type": "address"
+      },
+      {
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": True,
+    "inputs": [
+      
+    ],
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": False,
+    "inputs": [
+      {
+        "name": "_from",
+        "type": "address"
+      },
+      {
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": True,
+    "inputs": [
+      
+    ],
+    "name": "decimals",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": True,
+    "inputs": [
+      {
+        "name": "_owner",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "name": "balance",
+        "type": "uint256"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": True,
+    "inputs": [
+      
+    ],
+    "name": "symbol",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": False,
+    "inputs": [
+      {
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "name": "transfer",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": True,
+    "inputs": [
+      {
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "name": "_spender",
+        "type": "address"
+      }
+    ],
+    "name": "allowance",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": False,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "payable": True,
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "anonymous": False,
+    "inputs": [
+      {
+        "indexed": True,
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": True,
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "indexed": False,
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": False,
+    "inputs": [
+      {
+        "indexed": True,
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": True,
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": False,
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  }
+]

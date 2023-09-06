@@ -206,10 +206,6 @@ contract AutomatedVaultsFactory {
             "Null Address is not a valid newVault address"
         );
         // 2 vaults can't the same address, tx would revert at vault instantiation
-        if (getUserVaults[creator].length == 0) {
-            getUserVaults[creator].push(newVault);
-        } else {
-            getUserVaults[creator].push(newVault);
-        }
+        getUserVaults[creator].push(newVault);
     }
 }
