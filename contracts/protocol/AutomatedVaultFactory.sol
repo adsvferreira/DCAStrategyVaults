@@ -61,11 +61,6 @@ contract AutomatedVaultsFactory {
             memory initMultiAssetVaultFactoryParams,
         ConfigTypes.StrategyParams calldata strategyParams
     ) external payable returns (address newVaultAddress) {
-        // VALIDATIONS
-        require(
-            msg.value >= treasuryFixedFeeOnVaultCreation,
-            "Ether transfered insufficient to pay creation fees"
-        );
         _validateCreateVaultInputs(initMultiAssetVaultFactoryParams);
 
         // SEND CREATION FEE TO PROTOCOL TREASURY
@@ -136,10 +131,6 @@ contract AutomatedVaultsFactory {
             address(initMultiAssetVaultFactoryParams.depositAsset) !=
                 address(0),
             "ZERO_ADDRESS"
-        );
-        require(
-            msg.sender.balance > treasuryFixedFeeOnVaultCreation,
-            "Insufficient balance"
         );
         require(
             uniswapV2Factory.getPair(

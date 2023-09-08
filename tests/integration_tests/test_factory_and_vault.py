@@ -2,24 +2,27 @@ import pytest
 from typing import List
 from docs.abis import erc20_abi
 from helpers import get_account_from_pk
-from brownie import network, config, Contract
-from brownie import AutomatedVaultERC4626, AutomatedVaultsFactory, TreasuryVault
+from brownie import network, config, Contract, exceptions
+from brownie import AutomatedVaultERC4626, AutomatedVaultsFactory, TreasuryVault, StrategyWorker
 from scripts.deploy import deploy_treasury_vault, deploy_controller, deploy_strategy_worker, deploy_automated_vaults_factory
 
 # In order to run this tests a .env file must be created in the project's root containing 2 dev wallet private keys.
 # Ex:
 # export PRIVATE_KEY_1=...
 # export PRIVATE_KEY_2=...
+# export PRIVATE_KEY_3...
 #
 # COMMAND TO EXECUTE ON ARBITRUM LOCAL FORK: brownie test -s --network arbitrum-main-fork
 
 dev_wallet = get_account_from_pk(1)
 dev_wallet2 = get_account_from_pk(2)
+empty_wallet = get_account_from_pk(3)
 
 DEV_WALLET_DEPOSIT_TOKEN_ALLOWANCE_AMOUNT = 100_000
 DEV_WALLET_DEPOSIT_TOKEN_AMOUNT = 20_000
 DEV_WALLET2_DEPOSIT_TOKEN_ALLOWANCE_AMOUNT = 100_000
 DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT = 20_000
+DEV_WALLET_WITHDRAW_TOKEN_AMOUNT = 10_000
 
 @pytest.fixture()
 def configs():
@@ -48,7 +51,9 @@ def deposit_token():
     __check_network_is_mainnet_fork()
     return Contract.from_abi("ERC20", config["networks"][network.show_active()]["deposit_token_address"], erc20_abi)
 
-def test_create_new_vault(configs, deposit_token):
+################################ Contract Actions ################################ 
+
+def test_create_new_usdc_vault(configs, deposit_token):
     __check_network_is_mainnet_fork()
     # Arrange
     verify_flag = config["networks"][network.show_active()]["verify"]
@@ -150,7 +155,7 @@ def test_deposit_not_owned_vault(configs, deposit_token):
     initial_wallet_lp_balance = strategy_vault.balanceOf(dev_wallet)
     initial_wallet2_lp_balance = strategy_vault.balanceOf(dev_wallet2)
     initial_vault_lp_supply = strategy_vault.totalSupply()
-    creator_percentage_fee_on_deposit = configs["creator_percentage_fee_on_deposit"] / 1000
+    creator_percentage_fee_on_deposit = configs["creator_percentage_fee_on_deposit"] / 10_000
     # Act
     deposit_token.approve(strategy_vault.address, DEV_WALLET2_DEPOSIT_TOKEN_ALLOWANCE_AMOUNT, {'from': dev_wallet2})
     strategy_vault.deposit(DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT, dev_wallet2.address, {'from': dev_wallet2})
@@ -168,11 +173,91 @@ def test_deposit_not_owned_vault(configs, deposit_token):
     assert final_wallet2_lp_balance == DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT - creator_fee_on_deposit # Ratio 1:1 lp token/ underlying token
     assert final_wallet_lp_balance == initial_wallet_lp_balance + creator_fee_on_deposit # Ratio 1:1 lp token/ underlying token
 
-def test_withdraw():
+def test_partial_withdraw():
     __check_network_is_mainnet_fork()
+    # Arrange
+    strategy_vault = __get_strategy_vault()
+    initial_wallet_lp_balance = strategy_vault.balanceOf(dev_wallet)
+    initial_vault_lp_supply = strategy_vault.totalSupply()
+    # Act
+    strategy_vault.withdraw(DEV_WALLET_WITHDRAW_TOKEN_AMOUNT, dev_wallet,dev_wallet, {'from': dev_wallet})
+    final_wallet_lp_balance = strategy_vault.balanceOf(dev_wallet)
+    final_vault_lp_supply = strategy_vault.totalSupply()
+    # Assert
+    assert final_vault_lp_supply == initial_vault_lp_supply - DEV_WALLET_WITHDRAW_TOKEN_AMOUNT
+    assert final_wallet_lp_balance == initial_wallet_lp_balance - DEV_WALLET_WITHDRAW_TOKEN_AMOUNT # Ratio 1:1 lp token/ underlying token
+
+
+def test_total_withdraw():
+    __check_network_is_mainnet_fork()
+    # Arrange
+    strategy_vault = __get_strategy_vault()
+    initial_wallet_lp_balance = strategy_vault.balanceOf(dev_wallet)
+    initial_vault_lp_supply = strategy_vault.totalSupply()
+    # Act
+    strategy_vault.withdraw(initial_wallet_lp_balance, dev_wallet,dev_wallet, {'from': dev_wallet})
+    final_wallet_lp_balance = strategy_vault.balanceOf(dev_wallet)
+    final_vault_lp_supply = strategy_vault.totalSupply()
+    # Assert
+    assert final_vault_lp_supply == initial_vault_lp_supply - initial_wallet_lp_balance
+    assert final_wallet_lp_balance == 0
+
+def test_set_last_update():
     pass
 
-# TODO: Test all contract validations
+def test_create_new_valid_deposit_token_non_usdc_vault():
+    pass
+
+def test_balance_of_creator_without_deposit_after_another_wallet_deposit():
+    pass
+
+
+# TODO: 1 - Create method only owner set_valid_depositable_token 
+#       2 - Test_create_invalid_deposit_token_vault (Contract Validations)
+#       3 - Remove deposit address after withdraw if zero address + add validation to test_total_withdraw
+
+
+################################ Contract Validations ################################ 
+
+def test_instantiate_strategy_from_non_factory_address():
+    pass
+
+def test_create_strategy_with_insufficient_ether_balance(configs):
+    __check_network_is_mainnet_fork()
+    # Arrange 
+    vaults_factory = AutomatedVaultsFactory[-1]  
+    worker_address = StrategyWorker[-1].address
+    init_vault_from_factory_params=(configs["vault_name"], configs["vault_symbol"], configs["deposit_token_address"], configs["buy_token_addresses"])
+    strategy_params=(configs["buy_amounts"], configs["buy_frequency"], configs["strategy_type"], worker_address)
+    # Act
+    assert empty_wallet.balance() == 0
+    with pytest.raises(ValueError):
+        vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':empty_wallet, "value":100_000_000_000_000}) 
+
+def test_create_strategy_with_null_deposit_asset_address():
+    pass
+
+def test_create_strategy_with_invalid_swap_path_for_buy_token():
+    pass
+
+def test_create_strategy_with_invalid_swap_path_for_deposit_token():
+    pass
+
+def test_create_strategy_with_different_length_for_buy_tokens_and_amounts():
+    pass
+
+def test_create_strategy_with_to_many_buy_tokens():
+    pass
+
+def test_deposit_with_null_deposit_asset_address():
+    pass
+
+def test_set_last_by_not_worker_address():
+    pass
+
+
+
+################################ Helper Functions ################################ 
 
 def __check_network_is_mainnet_fork():
     if network.show_active() == "development" or "fork" not in network.show_active():
