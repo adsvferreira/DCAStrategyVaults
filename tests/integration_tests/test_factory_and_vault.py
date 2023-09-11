@@ -1,10 +1,9 @@
 import pytest
-from typing import List
+from typing import List, Tuple
 from docs.abis import erc20_abi
 from helpers import get_account_from_pk
-from brownie import network, config, Contract, exceptions
-from brownie import AutomatedVaultERC4626, AutomatedVaultsFactory, TreasuryVault, StrategyWorker
 from scripts.deploy import deploy_treasury_vault, deploy_controller, deploy_strategy_worker, deploy_automated_vaults_factory
+from brownie import AutomatedVaultERC4626, AutomatedVaultsFactory, TreasuryVault, StrategyWorker, network, config, Contract, exceptions, web3
 
 # In order to run this tests a .env file must be created in the project's root containing 2 dev wallet private keys.
 # Ex:
@@ -53,7 +52,7 @@ def deposit_token():
 
 ################################ Contract Actions ################################ 
 
-def test_create_new_usdc_vault(configs, deposit_token):
+def test_create_new_vault(configs, deposit_token):
     __check_network_is_mainnet_fork()
     # Arrange
     verify_flag = config["networks"][network.show_active()]["verify"]
@@ -63,13 +62,11 @@ def test_create_new_usdc_vault(configs, deposit_token):
     treasury_address = treasury_vault.address
     controller = deploy_controller(dev_wallet, verify_flag)
     controller_address = controller.address
-    worker = deploy_strategy_worker(dev_wallet, verify_flag, configs["dex_router_address"], configs["dex_main_token_address"], controller_address)
-    worker_address = worker.address
+    deploy_strategy_worker(dev_wallet, verify_flag, configs["dex_router_address"], configs["dex_main_token_address"], controller_address)
     vaults_factory = deploy_automated_vaults_factory(dev_wallet, verify_flag, configs["dex_factory_address"], configs["dex_main_token_address"], treasury_address, configs["treasury_fixed_fee_on_vault_creation"], configs["creator_percentage_fee_on_deposit"], configs["treasury_percentage_fee_on_balance_update"])
     treasury_vault_initial_native_balance = treasury_vault.balance()
     treasury_vault_initial_erc20_balance = deposit_token.balanceOf(treasury_address)
-    init_vault_from_factory_params=(configs["vault_name"], configs["vault_symbol"], configs["deposit_token_address"], configs["buy_token_addresses"])
-    strategy_params=(configs["buy_amounts"], configs["buy_frequency"], configs["strategy_type"], worker_address)
+    strategy_params, init_vault_from_factory_params = __get_default_strategy_and_init_vault_params(configs)
     vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":100_000_000_000_000})
     treasury_vault_final_native_balance = treasury_vault.balance()
     treasury_vault_final_erc20_balance = deposit_token.balanceOf(treasury_address)
@@ -156,6 +153,7 @@ def test_deposit_not_owned_vault(configs, deposit_token):
     initial_wallet2_lp_balance = strategy_vault.balanceOf(dev_wallet2)
     initial_vault_lp_supply = strategy_vault.totalSupply()
     creator_percentage_fee_on_deposit = configs["creator_percentage_fee_on_deposit"] / 10_000
+    creator_fee_on_deposit = creator_percentage_fee_on_deposit * DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT
     # Act
     deposit_token.approve(strategy_vault.address, DEV_WALLET2_DEPOSIT_TOKEN_ALLOWANCE_AMOUNT, {'from': dev_wallet2})
     strategy_vault.deposit(DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT, dev_wallet2.address, {'from': dev_wallet2})
@@ -164,7 +162,6 @@ def test_deposit_not_owned_vault(configs, deposit_token):
     final_vault_lp_supply = strategy_vault.totalSupply()
     final_vault_depositors_list_length = strategy_vault.allDepositorsLength()    
     second_depositor_address = strategy_vault.allDepositorAddresses(1)
-    creator_fee_on_deposit = creator_percentage_fee_on_deposit * DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT
     # Assert
     assert initial_wallet2_lp_balance == 0
     assert final_vault_lp_supply == initial_vault_lp_supply + DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT
@@ -202,34 +199,63 @@ def test_total_withdraw():
     assert final_vault_lp_supply == initial_vault_lp_supply - initial_wallet_lp_balance
     assert final_wallet_lp_balance == 0
 
-def test_set_last_update():
-    pass
 
-def test_create_new_valid_deposit_token_non_usdc_vault():
-    pass
+def test_balance_of_creator_without_deposit_after_another_wallet_deposit(configs, deposit_token):
+    __check_network_is_mainnet_fork()
+    # Arrange
+    vaults_factory = AutomatedVaultsFactory[-1]
+    strategy_params, init_vault_from_factory_params = __get_default_strategy_and_init_vault_params(configs)
+    vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':dev_wallet, "value":100_000_000_000_000})
+    strategy_vault = __get_strategy_vault(index=1)
+    initial_wallet2_lp_balance = strategy_vault.balanceOf(dev_wallet2)
+    initial_vault_lp_supply = strategy_vault.totalSupply()
+    initial_vault_depositors_list_length = strategy_vault.allDepositorsLength()
+    creator_percentage_fee_on_deposit = configs["creator_percentage_fee_on_deposit"] / 10_000
+    creator_fee_on_deposit = creator_percentage_fee_on_deposit * DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT
+    # Act
+    deposit_token.approve(strategy_vault.address, DEV_WALLET2_DEPOSIT_TOKEN_ALLOWANCE_AMOUNT, {'from': dev_wallet2})
+    strategy_vault.deposit(DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT, dev_wallet2.address, {'from': dev_wallet2})
+    final_wallet_lp_balance = strategy_vault.balanceOf(dev_wallet)
+    final_wallet2_lp_balance = strategy_vault.balanceOf(dev_wallet2)
+    final_vault_lp_supply = strategy_vault.totalSupply()
+    final_vault_depositors_list_length = strategy_vault.allDepositorsLength()  
+    first_depositor_address = strategy_vault.allDepositorAddresses(0)
+    # Assert
+    assert initial_vault_depositors_list_length == 0
+    assert initial_wallet2_lp_balance == 0
+    assert final_vault_lp_supply == initial_vault_lp_supply + DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT
+    assert final_vault_depositors_list_length == 2 # Depositor + creator that received fee as lp token
+    assert first_depositor_address == dev_wallet2
+    assert final_wallet2_lp_balance == DEV_WALLET2_DEPOSIT_TOKEN_AMOUNT - creator_fee_on_deposit # Ratio 1:1 lp token/ underlying token
+    assert final_wallet_lp_balance == creator_fee_on_deposit # Ratio 1:1 lp token/ underlying token  
 
-def test_balance_of_creator_without_deposit_after_another_wallet_deposit():
-    pass
 
 
-# TODO: 1 - Create method only owner set_valid_depositable_token 
-#       2 - Test_create_invalid_deposit_token_vault (Contract Validations)
-#       3 - Remove deposit address after withdraw if zero address + add validation to test_total_withdraw
+
+# TODO:    
+#       1 - Add validation for buy_address != deposit address (+ tests)
+#       2 - Remove deposit address after withdraw if zero address (+ add validation to test_total_withdraw)
+#       3 - Adapt contracts for weth as deposit token (swap path)
+#       4 - Test set last update when testing worker action
 
 
 ################################ Contract Validations ################################ 
 
-def test_instantiate_strategy_from_non_factory_address():
-    pass
+def test_instantiate_strategy_from_non_factory_address(configs):
+    # Arrange
+    verify_flag = config["networks"][network.show_active()]["verify"]
+    strategy_params, _ = __get_default_strategy_and_init_vault_params(configs)
+    init_vault_params = __get_init_vault_params(configs, dev_wallet)
+    # Act / Assert
+    with pytest.raises(exceptions.VirtualMachineError):
+        AutomatedVaultERC4626.deploy(init_vault_params, strategy_params, {'from': dev_wallet}, publish_source=verify_flag)        
 
 def test_create_strategy_with_insufficient_ether_balance(configs):
     __check_network_is_mainnet_fork()
     # Arrange 
     vaults_factory = AutomatedVaultsFactory[-1]  
-    worker_address = StrategyWorker[-1].address
-    init_vault_from_factory_params=(configs["vault_name"], configs["vault_symbol"], configs["deposit_token_address"], configs["buy_token_addresses"])
-    strategy_params=(configs["buy_amounts"], configs["buy_frequency"], configs["strategy_type"], worker_address)
-    # Act
+    strategy_params, init_vault_from_factory_params = __get_default_strategy_and_init_vault_params(configs)    
+    # Act / Assert
     assert empty_wallet.balance() == 0
     with pytest.raises(ValueError):
         vaults_factory.createVault(init_vault_from_factory_params, strategy_params, {'from':empty_wallet, "value":100_000_000_000_000}) 
@@ -252,7 +278,7 @@ def test_create_strategy_with_to_many_buy_tokens():
 def test_deposit_with_null_deposit_asset_address():
     pass
 
-def test_set_last_by_not_worker_address():
+def test_set_last_update_by_not_worker_address():
     pass
 
 
@@ -263,8 +289,14 @@ def __check_network_is_mainnet_fork():
     if network.show_active() == "development" or "fork" not in network.show_active():
         pytest.skip("Only for mainnet-fork testing!")
 
-def __get_strategy_vault() -> AutomatedVaultERC4626:
-    created_strategy_vault_address = AutomatedVaultsFactory[-1].allVaults(0)
+def __get_default_strategy_and_init_vault_params(configs:dict) -> Tuple[Tuple, Tuple]:
+    worker_address = StrategyWorker[-1].address
+    init_vault_from_factory_params=(configs["vault_name"], configs["vault_symbol"], configs["deposit_token_address"], configs["buy_token_addresses"])
+    strategy_params=(configs["buy_amounts"], configs["buy_frequency"], configs["strategy_type"], worker_address)
+    return strategy_params, init_vault_from_factory_params
+
+def __get_strategy_vault(index: int=0) -> AutomatedVaultERC4626:
+    created_strategy_vault_address = AutomatedVaultsFactory[-1].allVaults(index)
     return AutomatedVaultERC4626.at(created_strategy_vault_address)
 
 def __get_vault_buy_token_decimals(strategy_vault: AutomatedVaultERC4626) -> List[str]:
@@ -272,3 +304,17 @@ def __get_vault_buy_token_decimals(strategy_vault: AutomatedVaultERC4626) -> Lis
 
 def __get_tokens_decimals(token_addresses: List[str]) -> int:
     return [Contract.from_abi("ERC20", token_address, erc20_abi).decimals() for token_address in token_addresses]
+
+def __get_init_vault_params(configs:dict, wallet_address:str) -> tuple:
+    return (
+        configs["vault_name"], 
+        configs["vault_symbol"],
+        TreasuryVault[-1].address,
+        wallet_address,
+        AutomatedVaultsFactory[-1].address,
+        False,
+        configs["deposit_token_address"],
+        configs["buy_token_addresses"],
+        configs["creator_percentage_fee_on_deposit"],
+        configs["treasury_percentage_fee_on_balance_update"]
+    )
